@@ -57,7 +57,10 @@ input,select,textarea{font:inherit;color:var(--ink)}
 .seg button{border:0;background:transparent;padding:7px 16px;border-radius:8px;font-weight:600;cursor:pointer;color:var(--muted)}
 .seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
 .cab{font-size:.86rem;color:var(--muted)}
-@media (max-width:520px){.cab{display:none}.top{padding:10px 14px}.seg button{padding:6px 12px}}
+@media (max-width:640px){.top{padding:8px 12px;flex-wrap:nowrap;gap:8px}.chip,.cab{display:none}.brand-name{font-size:1.1rem}.seg button{padding:6px 12px;font-size:.9rem}main{padding:14px 12px 40px}.card{padding:16px 14px;border-radius:12px}}
+@media (max-width:700px){.tabs{flex-wrap:wrap;overflow:visible;gap:0 2px;margin-bottom:12px}.tabs button{padding:8px 10px;font-size:.9rem}}
+.back-form{display:none}
+@media (max-width:860px){.back-form{display:inline-block}}
 
 /* Layout */
 main{padding:24px 20px 60px}
@@ -1132,15 +1135,19 @@ function renderPro(){
   out += '<div class="card stack"><h3>Parcours'+srcHtml(ETAPES_SRC[R.etapesKey])+'</h3>'+stepsHtml(R.etapes)+'</div>';
   if (R.pieces && Object.keys(R.pieces).length) out += '<div class="card stack"><h3>Pièces à réunir'+srcHtml(PIECES_SRC[R.etapesKey])+'</h3>'+piecesHtml(R.pieces)+'</div>';
   out += '<p class="hint">Chaque repère « p. » ouvre la page du guide Anah ou du mode d’emploi MaPrimeRénov’ (septembre 2026) d’où vient l’information.</p>';
+  out += '<div class="row"><button type="button" class="btn back-form" id="back-form">Modifier le dossier</button></div>';
   $('#pro-result').innerHTML = out;
+  var bf = $('#back-form'); if (bf) bf.addEventListener('click', function(){ scrollTo2(fPro); });
 }
-$('#pro-go').addEventListener('click', function(){ proStarted = true; renderPro(); });
+function scrollTo2(el){ var y = el.getBoundingClientRect().top + window.pageYOffset - 64; window.scrollTo({top: Math.max(0,y), behavior:'smooth'}); }
+function goResult(){ if (window.innerWidth < 860) setTimeout(function(){ scrollTo2($('#pro-result')); }, 50); }
+$('#pro-go').addEventListener('click', function(){ proStarted = true; renderPro(); goResult(); });
 fPro.addEventListener('input', function(){ proProfile(); if (proStarted) renderPro(); });
 fPro.addEventListener('change', function(){ syncShow(fPro); proProfile(); if (proStarted) renderPro(); });
 function applyPreset(v){
   ['dossier','type','age','usage','dpe','statut','idf','nb','rfr','projet','fossile','cuve','audit','gain','iso2','chauf','ht','mar','devis','ttc','cee','locales','mpr5'].forEach(function(k){ if (fPro.elements[k]) fPro.elements[k].value = (v[k]!=null ? v[k] : (k==='mar'?'2000':k==='nb'?'2':k==='cuve'?'oui':k==='audit'?'non':k==='gain'?'2':k==='iso2'?'oui':k==='chauf'?'decarbone':k==='fossile'?'non':k==='devis'?'non':'')); });
   fPro.elements.adapt.checked = false; fPro.elements.acq.checked = false;
-  syncShow(fPro); proProfile(); proStarted = true; renderPro();
+  syncShow(fPro); proProfile(); proStarted = true; renderPro(); goResult();
 }
 (function(){ var box = $('#presets'); PRESETS.forEach(function(p){ var b = document.createElement('button'); b.type='button'; b.textContent = p.label; b.addEventListener('click', function(){ applyPreset(p.v); }); box.appendChild(b); }); })();
 function synthese(R){
