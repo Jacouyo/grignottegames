@@ -177,14 +177,43 @@ h3 .src{font-weight:400}
 .qualif{display:grid;gap:10px}
 .qualif li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
 .qualif .q{font-family:var(--mono);color:var(--accent);font-weight:500}
-.timeline{list-style:none;margin:0;padding:0;display:grid;gap:0}
-.timeline li{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;padding:10px 0;border-bottom:1px solid var(--line)}
-.timeline li > span:last-child{min-width:0}
-.timeline li:last-child{border-bottom:0}
-.timeline .d{font-family:var(--mono);font-weight:500;white-space:nowrap}
-.timeline .d.now{color:var(--bad)}
-.timeline .d.past{color:var(--muted)}
-@media (max-width:520px){.timeline li{grid-template-columns:1fr}}
+/* Réforme : tuiles, frise, avant/après */
+.hero4{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+.tile{border-radius:13px;padding:16px 18px;border:1px solid transparent;min-width:0}
+.tile .k{font-size:.72rem;text-transform:uppercase;letter-spacing:.09em;font-weight:700}
+.tile h3{margin:6px 0 6px;font-size:1.08rem}
+.tile p{font-size:.9rem}
+.tile.bad{background:var(--bad-soft)}.tile.bad .k,.tile.bad h3{color:var(--bad)}
+.tile.warn{background:var(--warn-soft)}.tile.warn .k,.tile.warn h3{color:var(--warn)}
+.tile.ok{background:var(--ok-soft)}.tile.ok .k,.tile.ok h3{color:var(--ok)}
+.tile.info{background:var(--info-soft)}.tile.info .k,.tile.info h3{color:var(--info)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:18px;align-items:start}
+@media (max-width:900px){.two{grid-template-columns:1fr}}
+.tl{list-style:none;margin:10px 0 0;padding:0 0 0 26px;position:relative}
+.tl::before{content:"";position:absolute;left:8px;top:8px;bottom:8px;width:2px;background:var(--line)}
+.tl li{position:relative;padding:6px 0 16px;min-width:0}
+.tl li::before{content:"";position:absolute;left:-23px;top:13px;width:12px;height:12px;border-radius:50%;background:var(--muted);border:2px solid var(--surface)}
+.tl li.now::before{background:var(--bad);box-shadow:0 0 0 4px var(--bad-soft)}
+.tl li.next::before{background:var(--accent)}
+.tl .d{font-family:var(--mono);font-size:.78rem;color:var(--muted);font-weight:500}
+.tl li.now .d{color:var(--bad)}
+.tl li.next .d{color:var(--accent)}
+.tl .t{font-family:var(--display);font-weight:700;font-size:1rem;margin:2px 0 3px;text-wrap:balance}
+.tl li.now .t{font-size:1.1rem}
+.tl .x{font-size:.9rem;color:var(--muted)}
+.ba{display:grid;gap:8px;margin-top:10px}
+.ba .row{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr) minmax(0,1.3fr) auto;gap:12px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.ba .row.h{background:transparent;border:0;padding:0 12px;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.ba .w{font-weight:600}
+.ba .b{font-size:.88rem;color:var(--muted)}
+.ba .a{font-size:.9rem}
+.eff{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap;margin-top:2px}
+.eff.perdu{background:var(--bad-soft);color:var(--bad)}.eff.exclu{background:var(--bad);color:#fff}.eff.gagne{background:var(--ok-soft);color:var(--ok)}.eff.egal{background:var(--surface-2);color:var(--muted)}.eff.mieux{background:var(--info-soft);color:var(--info)}
+@media (max-width:700px){.ba .row{grid-template-columns:1fr}.ba .row.h{display:none}.ba .b::before{content:"Avant : ";font-weight:600}.ba .a::before{content:"Depuis : ";font-weight:600}}
+.args{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.arg{border-left:4px solid var(--line);padding:4px 0 4px 14px;font-size:.92rem}
+.arg b{display:block;font-family:var(--display);font-size:1rem;margin-bottom:3px}
+.arg.bad{border-color:var(--bad)}.arg.warn{border-color:var(--warn)}.arg.ok{border-color:var(--ok)}.arg.info{border-color:var(--info)}
 footer.foot{max-width:1240px;margin:28px auto 0;font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);padding-top:12px;display:flex;flex-wrap:wrap;gap:6px 18px}
 @media (prefers-reduced-motion: reduce){.progress i{transition:none}}
 #print-area{display:none}
@@ -197,7 +226,8 @@ footer.foot{max-width:1240px;margin:28px auto 0;font-size:.8rem;color:var(--mute
   #print-area .st{border:1px solid #999;padding:1px 5px;border-radius:4px;font-size:10px;white-space:nowrap}
   #print-area .card{border:0;padding:0;box-shadow:none;background:none;margin-bottom:10px;page-break-inside:avoid}
   #print-area .vig{padding:3px 0;background:none;border-left:2px solid #999;padding-left:8px;margin:3px 0}#print-area .vig i{display:none}
-  #print-area .timeline li{grid-template-columns:110px 1fr;border-bottom:1px solid #ddd}
+  #print-area .tl::before{background:#bbb}#print-area .tl li::before{border-color:#fff;background:#888}#print-area .tl li.now::before{background:#c00;box-shadow:none}
+  #print-area .ba .row{border:1px solid #ddd}#print-area .eff{border:1px solid #999;background:none;color:#111}#print-area .tile{border:1px solid #ccc;background:none}#print-area .hero4{display:grid;grid-template-columns:1fr 1fr;gap:8px}#print-area .two{display:block}
   #print-area .note{border-left:2px solid #999;padding-left:8px}
   #print-area .neuf{border:1px solid #c00;color:#c00}
   #print-area .kpi{display:inline-block;border:1px solid #ccc;padding:6px 10px;margin:0 6px 6px 0}
@@ -1173,42 +1203,50 @@ $('#cab-clear').addEventListener('click', function(){ try { localStorage.removeI
 /* ---- Réforme 2026 ---- */
 function renderReforme(){
   var T = [
-    ["1er janv. 2025","past","Chaudières gaz : plus aucun financement MaPrimeRénov’ ; en copropriété, période transitoire (intégrables au calcul du gain jusqu’au 31 décembre 2026, coût non financé). Logements classés G interdits à la location.", [ref('anah',24), ref('mpr',8)]],
-    ["31 déc. 2025","past","Fin du rehaussement temporaire du déficit foncier (retour à 10 700 € par an).", [ref('anah',39)]],
-    ["1er janv. 2026","past","Plafonds de ressources 2026. MaPrimeAdapt’ : fin de l’accompagnement « socle », seuls restent le complet (600 € TTC) et le complet avec ergothérapeute (800 € TTC).", [ref('anah',[8,58])]],
-    ["17 août 2026","past","Compte unique sur france-renov.gouv.fr pour toute aide Anah, avec vérification d’identité (France Connect+ ou code par courrier). Le demandeur crée lui-même son compte ; le mandataire ne peut pas le faire. Mandataires financiers soumis à de nouveaux engagements et garanties.", [ref('anah',[6,10,14])]],
-    ["1er sept. 2026","now","<strong>La réforme.</strong> Rénovation par geste recentrée sur les chauffages décarbonés : PAC air/eau, PAC géothermique, réseau de chaleur (plus audit et dépose de cuve). Fin des forfaits isolation, ventilation, biomasse, chauffe-eau thermodynamique, solaire. Rénovation d’ampleur en maison individuelle : chauffage et eau chaude décarbonés obligatoires, gaz exclu, fioul et charbon toujours exclus. CEE : coup de pouce « rénovation d’ampleur » ouvert aux résidences secondaires et aux logements de moins de 15 ans classés E, F ou G si décarbonés ; bonifications nouvelles pour chauffe-eau thermodynamique et solaire thermique sous décarbonation. TVA à 5,5 % étendue aux PAC air/air.", [ref('anah',[7,14,17,32]), ref('mpr',5)]],
-    ["1er oct. 2026","next","Offre « PAC clé en main » annoncée : installation, entretien, financement et fourniture d’énergie.", [ref('anah',7), ref('mpr',17)]],
-    ["31 déc. 2026","next","Copropriétés : fin de la transition chaudière gaz et des méthodes d’évaluation libres (3CL-DPE 2021 obligatoire ensuite). Fin des dossiers copro intégrant une chaudière gaz au calcul du gain.", [ref('anah',24)]],
-    ["31 déc. 2027","next","Fin de Loc’Avantages (réduction d’impôt des bailleurs à loyer plafonné).", [ref('anah',29)]],
-    ["1er janv. 2028","next","Logements classés F interdits à la location.", [ref('mpr',8)]],
-    ["31 déc. 2029","next","Fin de l’expérimentation « petites copropriétés » (20 lots ou moins, gain ≥ 15 %).", [ref('anah',26)]],
-    ["1er janv. 2034","next","Logements classés E interdits à la location.", [ref('mpr',8)]]
+    ["1er janv. 2025","past","Fin des chaudières gaz, G interdits à la location","Plus aucun financement MaPrimeRénov’ pour une chaudière gaz. En copropriété, transition jusqu’au 31 décembre 2026 : intégrable au calcul du gain, coût non financé.", [ref('anah',24), ref('mpr',8)]],
+    ["31 déc. 2025","past","Déficit foncier : retour à 10 700 €","Fin du rehaussement temporaire du plafond imputable.", [ref('anah',39)]],
+    ["1er janv. 2026","past","Plafonds 2026, MaPrimeAdapt’ resserrée","Nouveaux plafonds de ressources. Fin de l’accompagnement « socle » : complet (600 € TTC) ou complet avec ergothérapeute (800 € TTC).", [ref('anah',[8,58])]],
+    ["17 août 2026","past","Compte unique et vérification d’identité","Tout demandeur crée lui-même son compte sur france-renov.gouv.fr (France Connect+ ou code par courrier). Le mandataire ne peut pas le faire à sa place ; les mandataires financiers sont soumis à des garanties.", [ref('anah',[6,10,14])]],
+    ["1er sept. 2026","now","La réforme","Par geste : seuls les chauffages décarbonés restent aidés. Ampleur en maison : gaz exclu. CEE : deux marchés s’ouvrent, bonifications chauffe-eau thermodynamique et solaire. TVA 5,5 % sur les PAC air/air. Détail dans les tuiles ci-dessus.", [ref('anah',[7,14,17,32]), ref('mpr',5)]],
+    ["1er oct. 2026","next","Offre « PAC clé en main »","Installation, entretien, financement et fourniture d’énergie dans une seule offre, annoncée par l’Anah.", [ref('anah',7), ref('mpr',17)]],
+    ["31 déc. 2026","next","Copropriétés : fin des transitions","Plus de chaudière gaz dans le calcul du gain ; méthode 3CL-DPE 2021 obligatoire pour l’évaluation.", [ref('anah',24)]],
+    ["31 déc. 2027","next","Fin de Loc’Avantages","Dernier jour pour le conventionnement à loyer plafonné avec réduction d’impôt.", [ref('anah',29)]],
+    ["1er janv. 2028","next","F interdits à la location","Après les G en 2025.", [ref('mpr',8)]],
+    ["31 déc. 2029","next","Fin des « petites copropriétés »","Clôture de l’expérimentation (20 lots ou moins, gain ≥ 15 %).", [ref('anah',26)]],
+    ["1er janv. 2034","next","E interdits à la location","Toute la classe E sort du marché locatif.", [ref('mpr',8)]]
   ];
   var AV = [
-    ["Isolation seule (murs, combles, planchers, fenêtres)","Forfait MaPrimeRénov’ par geste + CEE","CEE seuls, TVA 5,5 %, éco-PTZ ; ou dans une rénovation d’ampleur"],
-    ["Ventilation","Forfait MaPrimeRénov’ par geste","CEE seuls (ou rénovation d’ampleur)"],
-    ["Chaudière ou poêle biomasse","Forfait MaPrimeRénov’ par geste + CEE","CEE seuls ; coup de pouce si remplacement d’une chaudière fossile (chaudière) ou d’un chauffage charbon (Flamme verte)"],
-    ["Chauffe-eau thermodynamique","Forfait MaPrimeRénov’ par geste","CEE bonifiés si chauffage et/ou eau chaude entièrement décarbonés"],
-    ["Solaire thermique (CESI, SSC)","Forfait MaPrimeRénov’ par geste","CEE bonifiés si décarbonation ; coup de pouce pour un système solaire combiné remplaçant une chaudière fossile"],
-    ["PAC air/eau, géothermie, réseau de chaleur","MaPrimeRénov’ + CEE","Inchangé : MaPrimeRénov’ (très modestes à intermédiaires) + CEE, coup de pouce si remplacement fossile"],
-    ["PAC air/air","CEE (SCOP ≥ 3,9), TVA des travaux d’amélioration","CEE (SCOP ≥ 3,9), TVA 5,5 %"],
-    ["Rénovation d’ampleur, maison, gaz conservé","Admise","Exclue"],
-    ["Rénovation d’ampleur, résidence secondaire ou logement < 15 ans","Aucune aide","Coup de pouce CEE si E, F ou G et projet décarboné"],
-    ["Chaudière gaz","Aucune aide Anah","Aucune aide Anah, TVA 20 %, hors éco-PTZ"]
+    ["Isolation seule (murs, combles, planchers, fenêtres)","Forfait MaPrimeRénov’ + CEE","CEE seuls, TVA 5,5 %, éco-PTZ. Ou l’intégrer à une rénovation d’ampleur.","perdu","Perdu"],
+    ["Ventilation","Forfait MaPrimeRénov’","CEE seuls, ou rénovation d’ampleur.","perdu","Perdu"],
+    ["Chaudière ou poêle biomasse","Forfait MaPrimeRénov’ + CEE","CEE seuls. Coup de pouce si une chaudière biomasse remplace une chaudière fossile, ou un appareil Flamme verte un chauffage charbon.","perdu","Perdu"],
+    ["Chauffe-eau thermodynamique","Forfait MaPrimeRénov’","CEE bonifiés si chauffage et/ou eau chaude entièrement décarbonés.","perdu","Perdu"],
+    ["Solaire thermique (CESI, SSC)","Forfait MaPrimeRénov’","CEE bonifiés si décarbonation. Coup de pouce pour un système solaire combiné remplaçant une chaudière fossile.","perdu","Perdu"],
+    ["PAC air/eau, géothermie, réseau de chaleur","MaPrimeRénov’ + CEE","MaPrimeRénov’ (très modestes à intermédiaires) + CEE, coup de pouce en remplacement d’une chaudière fossile.","egal","Inchangé"],
+    ["PAC air/air","CEE (SCOP ≥ 3,9), TVA des travaux d’amélioration","CEE (SCOP ≥ 3,9) et TVA à 5,5 %.","mieux","Mieux"],
+    ["Rénovation d’ampleur en maison avec gaz conservé","Admise","Refusée. Chauffage et eau chaude doivent être décarbonés.","exclu","Exclu"],
+    ["Rénovation d’ampleur, résidence secondaire ou logement de moins de 15 ans","Aucune aide","Coup de pouce CEE si classé E, F ou G et projet décarboné.","gagne","Gagné"],
+    ["Chaudière gaz","Aucune aide Anah","Aucune aide Anah, TVA 20 %, hors éco-PTZ.","egal","Inchangé"]
   ];
-  var h = '<div class="card stack wide"><div class="row" style="justify-content:space-between"><h2>Ce qui a changé, ce qui vient</h2><button type="button" class="btn" id="reforme-print">Imprimer le mémo</button></div><p class="muted small">Dates et règles tirées des encadrés « évolutions » du guide Anah de septembre 2026 et du mode d’emploi MaPrimeRénov’. Les anciens montants ne figurent pas dans ces guides et ne sont donc pas reproduits ici.</p></div>';
-  h += '<div class="card wide" id="reforme-frise"><h3>Frise</h3><ul class="timeline" style="margin-top:8px">'+T.map(function(t){ return '<li><span class="d '+t[1]+'">'+esc(t[0])+'</span><span>'+t[2]+srcHtml(t[3])+'</span></li>'; }).join('')+'</ul></div>';
-  h += '<div class="card wide" id="reforme-avap"><h3>Avant → depuis le 1<sup>er</sup> septembre 2026'+srcHtml([ref('anah',[7,31,32]), ref('mpr',5)])+'</h3><div class="tblwrap" style="margin-top:8px"><table><thead><tr><th>Travaux</th><th>Jusqu’au 31 août 2026</th><th>Depuis le 1er septembre 2026</th></tr></thead><tbody>'+AV.map(function(r){ return '<tr><td><strong>'+esc(r[0])+'</strong></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
-  h += '<div class="card wide"><h3>Ce que ça change pour un réseau de partenaires RGE</h3><div class="vigs" style="margin-top:8px">'
-    + '<div class="vig bad"><i></i><span>L’isolation, la ventilation, le bois, le chauffe-eau thermodynamique et le solaire ne se vendent plus « avec MaPrimeRénov’ » en geste isolé : l’argument devient la prime CEE, la TVA à 5,5 % et l’éco-PTZ, ou le passage en rénovation d’ampleur (E, F, G).</span></div>'
-    + '<div class="vig warn"><i></i><span>La chaudière gaz n’a plus sa place dans une offre de rénovation d’ampleur en maison, et n’ouvre aucune aide en geste : la PAC prend le relais, avec un coup de pouce CEE au remplacement d’une chaudière fossile.</span></div>'
-    + '<div class="vig ok"><i></i><span>Deux marchés s’ouvrent aux CEE seuls : les résidences secondaires et les logements de moins de 15 ans classés E, F ou G, si le projet est décarboné.</span></div>'
-    + '<div class="vig info"><i></i><span>Bailleurs : F interdit à la location en 2028, E en 2034. Un argument de rendez-vous à lui seul.</span></div>'
+  var h = '<div class="card stack wide"><div class="row" style="justify-content:space-between"><h2>Réforme du 1<sup>er</sup> septembre 2026</h2><button type="button" class="btn" id="reforme-print">Imprimer le mémo</button></div><p class="muted small">Ce qui a changé, ce qui vient, et ce que ça change pour un réseau de partenaires RGE. Dates et règles tirées des encadrés « évolutions » des guides Anah de septembre 2026 ; les anciens montants n’y figurent pas et ne sont donc pas reproduits.</p></div>';
+  h += '<div class="wide" id="reforme-tuiles"><div class="hero4">'
+    + '<div class="tile bad"><div class="k">Par geste</div><h3>Seuls les chauffages décarbonés</h3><p>PAC air/eau, PAC géothermique, réseau de chaleur, plus l’audit et la dépose de cuve. Fin des forfaits isolation, ventilation, bois, chauffe-eau thermodynamique, solaire.'+srcHtml([ref('anah',[7,14])])+'</p></div>'
+    + '<div class="tile warn"><div class="k">Rénovation d’ampleur</div><h3>Gaz exclu en maison</h3><p>Chauffage et eau chaude décarbonés obligatoires en maison individuelle ; fioul et charbon restent exclus. Encore possible en appartement.'+srcHtml([ref('anah',[7,17,19])])+'</p></div>'
+    + '<div class="tile ok"><div class="k">CEE</div><h3>Deux marchés s’ouvrent</h3><p>Coup de pouce « rénovation d’ampleur » pour les résidences secondaires et les logements de moins de 15 ans classés E, F ou G, si décarbonés. Bonifications chauffe-eau thermodynamique et solaire.'+srcHtml([ref('anah',[7,32])])+'</p></div>'
+    + '<div class="tile info"><div class="k">TVA et offres</div><h3>5,5 % sur les PAC air/air</h3><p>Taux réduit étendu aux PAC air/air. Offre « PAC clé en main » annoncée pour le 1er octobre 2026.'+srcHtml([ref('anah',7), ref('mpr',17)])+'</p></div>'
+    + '</div></div>';
+  h += '<div class="two wide">';
+  h += '<div class="card" id="reforme-frise"><h3>La frise</h3><ul class="tl">'+T.map(function(t){ return '<li class="'+t[1]+'"><div class="d">'+esc(t[0])+'</div><div class="t">'+esc(t[2])+'</div><div class="x">'+esc(t[3])+srcHtml(t[4])+'</div></li>'; }).join('')+'</ul></div>';
+  h += '<div class="card" id="reforme-avap"><h3>Avant, après'+srcHtml([ref('anah',[7,31,32]), ref('mpr',5)])+'</h3><div class="ba"><div class="row h"><span>Travaux</span><span>Jusqu’au 31 août</span><span>Depuis le 1er septembre</span><span></span></div>'+AV.map(function(r){ return '<div class="row"><span class="w">'+esc(r[0])+'</span><span class="b">'+esc(r[1])+'</span><span class="a">'+esc(r[2])+'</span><span class="eff '+r[3]+'">'+esc(r[4])+'</span></div>'; }).join('')+'</div></div>';
+  h += '</div>';
+  h += '<div class="card wide"><h3>Pour un réseau de partenaires RGE</h3><div class="args" style="margin-top:12px">'
+    + '<div class="arg bad"><b>Le discours « avec MaPrimeRénov’ » ne tient plus en geste</b>Isolation, ventilation, bois, chauffe-eau thermodynamique, solaire : l’argument devient la prime CEE, la TVA à 5,5 % et l’éco-PTZ, ou le passage en rénovation d’ampleur (E, F, G).</div>'
+    + '<div class="arg warn"><b>La chaudière gaz sort de l’offre</b>Plus de place dans une rénovation d’ampleur en maison, aucune aide en geste. La PAC prend le relais, avec un coup de pouce CEE au remplacement d’une chaudière fossile.</div>'
+    + '<div class="arg ok"><b>Deux nouveaux marchés en CEE</b>Résidences secondaires et logements de moins de 15 ans classés E, F ou G, si le projet est décarboné.</div>'
+    + '<div class="arg info"><b>Les bailleurs ont un calendrier</b>F interdits à la location en 2028, E en 2034. Un argument de rendez-vous à lui seul.</div>'
     + '</div></div>';
   $('#tab-reforme').innerHTML = h;
   $('#reforme-print').addEventListener('click', function(){
-    printHtml('<h1>Mémo réforme, 1er septembre 2026</h1><p>Aiguilleur Rénov’ · '+esc(new Date().toLocaleDateString('fr-FR'))+'</p>'+cabHeader()+$('#reforme-frise').outerHTML+$('#reforme-avap').outerHTML+'<p style="margin-top:10px;font-size:10px">Sources : Anah, Les aides financières en 2026 (éd. septembre 2026) ; MaPrimeRénov’, le mode d’emploi (septembre 2026).</p>');
+    printHtml('<h1>Mémo réforme, 1er septembre 2026</h1><p>Aiguilleur Rénov’ · '+esc(new Date().toLocaleDateString('fr-FR'))+'</p>'+cabHeader()+$('#reforme-tuiles').innerHTML+$('#reforme-frise').outerHTML+$('#reforme-avap').outerHTML+'<p style="margin-top:10px;font-size:10px">Sources : Anah, Les aides financières en 2026 (éd. septembre 2026) ; MaPrimeRénov’, le mode d’emploi (septembre 2026).</p>');
   });
 }
 
