@@ -72,6 +72,40 @@ serveur, au moment où une partie du mode « Léviathan » se termine :</p>
 Elles ne sont ni vendues, ni partagées, ni utilisées à des fins publicitaires,
 ni recoupées avec quoi que ce soit d'autre.</p>
 
+<h2>Le journal de progression — pour améliorer le jeu</h2>
+<p>Le même interrupteur commande une seconde transmission : à la fin de chaque
+partie, l'application envoie au même serveur une ligne de <strong>nombres</strong>
+décrivant cette partie. Elle sert à savoir si le jeu est trop dur, trop lent, ou
+s'il apprend vraiment quelque chose.</p>
+<p>Ce qui part : l'identifiant aléatoire ci-dessus, le numéro de la partie et le
+nombre de jours depuis l'installation, sa durée, le temps passé en animation, le
+temps de réponse médian, le nombre de bonnes réponses et d'erreurs, le niveau
+joué et le niveau le plus haut atteint, le résultat, et quel bouton a été appuyé
+ensuite (« suivant », « la carte », « revanche », ou rien).</p>
+<p><strong>Ce qui ne part pas :</strong> aucun texte, aucun prénom, aucun âge,
+aucune date de naissance, aucune position, aucun identifiant d'appareil, aucun
+identifiant publicitaire, aucun modèle de téléphone. Ces données ne sont ni
+vendues, ni partagées, ni utilisées à des fins publicitaires.</p>
+<p>L'identifiant est propre à <strong>chaque profil de joueur</strong> : sur un
+téléphone partagé par plusieurs enfants, rien ne relie leurs journaux entre eux.</p>
+
+<h2>Signaler un problème — pendant la phase de test</h2>
+<p>Pendant la phase de test fermé, un bouton « ✉ » permet d'envoyer
+un signalement à l'auteur. Il contient quatre cases à cocher (« Bug », « À améliorer », « Idée », « Autre »), une
+<strong>photo de l'écran</strong> prise au moment de l'appui, le contexte
+technique (écran, niveau, version, langue, modèle d'appareil, dernier
+avertissement du moteur) et, facultativement, <strong>un texte écrit par la
+personne</strong>.</p>
+<p>Ce texte est le seul contenu écrit que l'application transmette. Il part
+<strong>vers l'auteur seul</strong> : il n'est jamais réaffiché à un autre
+joueur, il n'existe ni fil de discussion, ni profil public, ni destinataire
+autre que l'auteur. Un avertissement s'affiche au-dessus du champ : « n'écris
+pas ton nom ni ton adresse ».</p>
+<p><strong>Ce bouton disparaîtra à la fin de la phase de test</strong>, et avec
+lui toute possibilité d'écrire du texte dans l'application.</p>
+<p>Un signalement n'est envoyé que si la personne appuie sur « Envoyer ». Sans
+cet appui, rien ne quitte l'appareil.</p>
+
 <h2>Effacer ses données</h2>
 <p>Deux gestes suffisent, et aucun ne demande de nous écrire :</p>
 <ul>
@@ -84,9 +118,7 @@ ni recoupées avec quoi que ce soit d'autre.</p>
 ci-dessous en indiquant le nom de pirate affiché.</p>
 
 <h2>Enfants</h2>
-<p>Cette application s'adresse aux enfants. Elle est conçue pour n'avoir aucun
-contenu généré par les utilisateurs, aucune communication entre joueurs, aucune
-publicité et aucun achat. L'interrupteur du classement en ligne est prévu pour
+<p>Cette application s'adresse aux enfants. Elle n'a aucune communication entre joueurs, aucune publicité et aucun achat. Le seul texte qu'une personne puisse écrire est le signalement décrit plus haut : il part vers l'auteur seul, n'est jamais réaffiché à quiconque, et disparaîtra à la fin de la phase de test. L'interrupteur du classement en ligne est prévu pour
 être utilisé par un parent.</p>
 
 <h2>Contact</h2>
@@ -127,6 +159,37 @@ the player joined a crew.</p>
 <p>This data is used <strong>solely</strong> to display a leaderboard. It is
 never sold, shared, used for advertising, or combined with anything else.</p>
 
+<h2>The progress log — to improve the game</h2>
+<p>The same switch controls a second transmission: at the end of each game, the
+app sends the same server one line of <strong>numbers</strong> describing that
+game. It is used to find out whether the game is too hard, too slow, or whether
+it actually teaches anything.</p>
+<p>What is sent: the random identifier above, the game's number and the number of
+days since installation, its duration, the time spent in animation, the median
+answer time, the counts of correct and wrong answers, the level played and the
+highest level reached, the outcome, and which button was pressed next ("next",
+"the map", "rematch", or nothing).</p>
+<p><strong>What is not sent:</strong> no text, no first name, no age, no date of
+birth, no location, no device identifier, no advertising identifier, no phone
+model. This data is never sold, shared, or used for advertising.</p>
+<p>The identifier belongs to <strong>each player profile</strong>: on a phone
+shared by several children, nothing links their logs to one another.</p>
+
+<h2>Reporting a problem — during the testing phase</h2>
+<p>During the closed testing phase, an "✉" button sends a report
+to the author. It contains four checkboxes ("Bug", "Could be better", "Idea", "Something else"), a <strong>picture of the
+screen</strong> taken at the moment of the tap, the technical context (screen,
+level, version, language, device model, last engine warning) and, optionally,
+<strong>text written by the person</strong>.</p>
+<p>That text is the only written content the app transmits. It goes
+<strong>to the author alone</strong>: it is never shown to another player, and
+there is no thread, no public profile, and no recipient other than the author. A
+warning is displayed above the field: "don't write your name or address".</p>
+<p><strong>This button will be removed at the end of the testing phase</strong>,
+and with it any way of typing text in the app.</p>
+<p>A report is only sent if the person taps "Send". Without that tap, nothing
+leaves the device.</p>
+
 <h2>Erasing your data</h2>
 <p>"New pirate" in the game draws a fresh identifier and orphans the old
 leaderboard entry; uninstalling the app erases everything stored on the device.
@@ -134,8 +197,7 @@ To have a specific leaderboard entry removed, write to the address below and
 quote the pirate name shown.</p>
 
 <h2>Children</h2>
-<p>This app is directed to children. It is designed with no user-generated
-content, no player-to-player communication, no advertising and no purchases.
+<p>This app is directed to children. It has no player-to-player communication, no advertising and no purchases. The only text a person can write is the report described above: it goes to the author alone, is never shown to anyone else, and will be removed at the end of the testing phase.
 The online leaderboard switch is intended to be operated by a parent.</p>
 
 <h2>Contact</h2>
