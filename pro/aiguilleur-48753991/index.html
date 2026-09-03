@@ -151,6 +151,23 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 .wide{grid-column:1/-1}
 .note{font-size:.84rem;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
 .lead-box{background:var(--surface-2);border-radius:11px;padding:14px}
+.agenda-wrap{overflow-x:auto}
+.agenda{display:grid;grid-template-columns:repeat(5,minmax(92px,1fr));gap:8px;min-width:480px}
+.agenda .day{display:grid;gap:6px}
+.agenda .dh{text-align:center;padding:6px 4px;border-radius:9px;background:var(--surface-2)}
+.agenda .dh b{display:block;font-family:var(--display);font-size:.95rem}
+.agenda .dh span{font-size:.76rem;color:var(--muted)}
+.slot{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 4px;font-family:var(--mono);font-size:.86rem;cursor:pointer;text-align:center}
+.slot:hover{border-color:var(--accent);color:var(--accent)}
+.slot.pris{color:var(--muted);text-decoration:line-through;background:var(--surface-2);cursor:not-allowed;border-style:dashed}
+.slot.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.rdv{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;background:var(--ok-soft);color:var(--ok);font-weight:600}
+.rdv.none{background:var(--surface-2);color:var(--muted);font-weight:400}
+.demande{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.demande .when{font-family:var(--mono);font-size:.86rem;color:var(--accent);font-weight:500}
+.demande .who{font-weight:600;margin-top:2px}
+.demande .what{font-size:.9rem;color:var(--muted);margin-top:2px}
+.count{display:inline-block;min-width:18px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:.72rem;font-weight:700;margin-left:6px;line-height:18px;text-align:center}
 .empty{padding:40px 20px;text-align:center;color:var(--muted)}
 .qualif{display:grid;gap:10px}
 .qualif li{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
@@ -321,9 +338,11 @@ footer.foot{max-width:1240px;margin:28px auto 0;font-size:.8rem;color:var(--mute
     <section class="step" data-step="4" hidden>
       <div class="stack" id="part-result"></div>
       <div class="card" style="margin-top:18px">
-        <h3>Être rappelé par un conseiller</h3>
-        <p class="muted small" style="margin:4px 0 14px">Votre simulation est jointe à la demande. Un professionnel vérifie l’éligibilité, obtient la prime CEE avant devis et monte le dossier.</p>
+        <h3>Choisir un créneau de rappel</h3>
+        <p class="muted small" style="margin:4px 0 14px" id="agenda-intro">Un conseiller vous rappelle au créneau choisi, votre simulation sous les yeux. Il vérifie l’éligibilité, obtient la prime CEE avant devis et monte le dossier.</p>
         <div class="stack">
+          <div class="agenda-wrap"><div class="agenda" id="agenda"></div></div>
+          <div class="rdv none" id="rdv-pick">Choisissez un créneau ci-dessus, ou laissez le conseiller vous proposer un horaire.</div>
           <div class="grid2">
             <div class="field"><label for="l-nom">Nom</label><input id="l-nom" type="text" name="l_nom"></div>
             <div class="field"><label for="l-tel">Téléphone</label><input id="l-tel" type="tel" name="l_tel"></div>
@@ -331,7 +350,7 @@ footer.foot{max-width:1240px;margin:28px auto 0;font-size:.8rem;color:var(--mute
             <div class="field"><label for="l-cp">Code postal</label><input id="l-cp" type="text" name="l_cp" inputmode="numeric" maxlength="5"></div>
           </div>
           <label class="check"><input type="checkbox" name="l_ok"> J’accepte d’être contacté au sujet de mon projet de rénovation. Mes données ne sont utilisées que pour cette demande.</label>
-          <div class="row"><button type="button" class="btn primary" id="lead-go">Préparer ma demande</button><button type="button" class="btn ghost" data-prev="3">Modifier ma simulation</button></div>
+          <div class="row"><button type="button" class="btn primary" id="lead-go">Confirmer le rendez-vous</button><button type="button" class="btn ghost" data-prev="3">Modifier ma simulation</button></div>
           <div id="lead-out" hidden class="lead-box stack">
             <p class="small" id="lead-msg"></p>
             <textarea id="lead-txt" readonly aria-label="Fiche de demande"></textarea>
@@ -350,6 +369,7 @@ footer.foot{max-width:1240px;margin:28px auto 0;font-size:.8rem;color:var(--mute
     <button type="button" data-tab="copro">Copropriété</button>
     <button type="button" data-tab="reforme">Réforme 2026</button>
     <button type="button" data-tab="bareme">Barème 2026</button>
+    <button type="button" data-tab="demandes">Demandes<span class="count" id="dem-count" hidden>0</span></button>
     <button type="button" data-tab="reglages">Réglages</button>
   </nav>
 
@@ -439,6 +459,7 @@ footer.foot{max-width:1240px;margin:28px auto 0;font-size:.8rem;color:var(--mute
 
   <section id="tab-reforme" class="bareme" hidden></section>
   <section id="tab-bareme" class="bareme" hidden></section>
+  <section id="tab-demandes" class="funnel" hidden></section>
 
   <section id="tab-reglages" class="funnel" hidden>
     <form class="card stack" id="f-cab" autocomplete="off">
@@ -904,7 +925,7 @@ fPart.addEventListener('click', function(e){
   if (b.hasAttribute('data-next')){
     var n = parseInt(b.getAttribute('data-next'),10);
     if (n===3 && !num(fPart.elements.rfr.value)){ fPart.elements.rfr.focus(); fPart.elements.rfr.setCustomValidity('x'); fPart.elements.rfr.reportValidity(); fPart.elements.rfr.setCustomValidity(''); return; }
-    if (n===4){ renderPart(); }
+    if (n===4){ renderPart(); renderAgenda(); }
     showStep(n);
   }
   if (b.hasAttribute('data-prev')) showStep(parseInt(b.getAttribute('data-prev'),10));
@@ -921,11 +942,42 @@ function renderPart(){
   out += '<p class="note">Estimation indicative d’après le barème Anah du 1er septembre 2026, sous réserve de l’instruction du dossier. Les primes CEE dépendent du fournisseur d’énergie.</p>';
   $('#part-result').innerHTML = out;
 }
+/* ---- Agenda de rappel (créneaux indicatifs) ---- */
+var SLOTS = ["9:00","10:30","14:00","15:30","17:00"];
+var JOURS = ["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+var MOIS = ["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+var leadSlot = null;
+function agendaDays(){
+  var out = [], d = new Date(); d.setHours(0,0,0,0);
+  while (out.length < 5){ d.setDate(d.getDate()+1); if (d.getDay()!==0 && d.getDay()!==6) out.push(new Date(d)); }
+  return out;
+}
+function slotTaken(day, k){ var h = (day.getDate()*7 + day.getMonth()*3 + k*5) % 7; return h===1 || h===4; }
+function slotLabel(day, s){ return JOURS[day.getDay()]+" "+day.getDate()+" "+MOIS[day.getMonth()]+" à "+s; }
+function renderAgenda(){
+  var box = $('#agenda'); if (!box) return;
+  leadSlot = null; $('#rdv-pick').className = 'rdv none'; $('#rdv-pick').textContent = "Choisissez un créneau ci-dessus, ou laissez le conseiller vous proposer un horaire.";
+  box.innerHTML = agendaDays().map(function(day, di){
+    return '<div class="day"><div class="dh"><b>'+JOURS[day.getDay()].slice(0,3)+'.</b><span>'+day.getDate()+' '+MOIS[day.getMonth()].slice(0,4)+'.</span></div>'
+      + SLOTS.map(function(s,k){ var pris = slotTaken(day,k); return '<button type="button" class="slot'+(pris?' pris':'')+'" '+(pris?'disabled aria-disabled="true" title="Créneau pris"':'')+' data-d="'+day.toISOString().slice(0,10)+'" data-s="'+s+'" data-l="'+esc(slotLabel(day,s))+'">'+s+'</button>'; }).join('')
+      + '</div>';
+  }).join('');
+  var cab = loadCab();
+  $('#agenda-intro').textContent = (cab.nom ? "Un conseiller de "+cab.nom : "Un conseiller")+" vous rappelle au créneau choisi, votre simulation sous les yeux. Il vérifie l’éligibilité, obtient la prime CEE avant devis et monte le dossier. Créneaux indicatifs, confirmés par SMS.";
+}
+$('#agenda').addEventListener('click', function(e){
+  var b = e.target.closest('.slot'); if (!b || b.classList.contains('pris')) return;
+  $$('.slot.on', $('#agenda')).forEach(function(x){ x.classList.remove('on'); });
+  b.classList.add('on');
+  leadSlot = {d:b.getAttribute('data-d'), s:b.getAttribute('data-s'), l:b.getAttribute('data-l')};
+  var p = $('#rdv-pick'); p.className = 'rdv'; p.textContent = "Rappel demandé le "+leadSlot.l+".";
+});
 function ficheLead(i, R, lead){
   var cab = loadCab();
   var lines = [];
-  lines.push("DEMANDE DE CONTACT — Aiguilleur Rénov’ ("+new Date().toLocaleDateString('fr-FR')+")");
+  lines.push("DEMANDE DE RENDEZ-VOUS — Aiguilleur Rénov’ ("+new Date().toLocaleDateString('fr-FR')+")");
   if (cab.nom) lines.push("Destinataire : "+cab.nom);
+  lines.push("Créneau souhaité : "+(lead.slot ? lead.slot.l : "au choix du conseiller"));
   lines.push("");
   lines.push("Contact : "+(lead.nom||'—')+" · "+(lead.tel||'—')+" · "+(lead.mail||'—')+" · CP "+(lead.cp||'—'));
   lines.push("");
@@ -945,19 +997,36 @@ function ficheLead(i, R, lead){
 }
 $('#lead-go').addEventListener('click', function(){
   if (!lastR) renderPart();
-  var lead = {nom:fPart.elements.l_nom.value.trim(), tel:fPart.elements.l_tel.value.trim(), mail:fPart.elements.l_mail.value.trim(), cp:fPart.elements.l_cp.value.trim()};
+  var lead = {nom:fPart.elements.l_nom.value.trim(), tel:fPart.elements.l_tel.value.trim(), mail:fPart.elements.l_mail.value.trim(), cp:fPart.elements.l_cp.value.trim(), slot:leadSlot};
   var msg = $('#lead-msg');
-  if (!fPart.elements.l_ok.checked){ msg.textContent = "Cochez la case de consentement pour préparer la demande."; $('#lead-out').hidden=false; $('#lead-txt').value=''; $('#lead-mail').hidden=true; return; }
+  if (!fPart.elements.l_ok.checked){ msg.textContent = "Cochez la case de consentement pour confirmer le rendez-vous."; $('#lead-out').hidden=false; $('#lead-txt').value=''; $('#lead-mail').hidden=true; return; }
   if (!lead.tel && !lead.mail){ msg.textContent = "Indiquez au moins un téléphone ou un e-mail."; $('#lead-out').hidden=false; $('#lead-txt').value=''; $('#lead-mail').hidden=true; return; }
-  var txt = ficheLead(readForm(fPart), lastR, lead);
+  var i = readForm(fPart), R = lastR;
+  var txt = ficheLead(i, R, lead);
   $('#lead-txt').value = txt;
   var cab = loadCab();
   var a = $('#lead-mail');
-  if (cab.mail){ a.href = 'mailto:'+encodeURIComponent(cab.mail)+'?subject='+encodeURIComponent('Demande de contact — '+PROJET[lastR.input.projet])+'&body='+encodeURIComponent(txt); a.hidden=false; msg.textContent = "Votre demande est prête : envoyez-la à "+(cab.nom||cab.mail)+" ou copiez la fiche."; }
-  else { a.hidden=true; msg.textContent = "Votre fiche est prête à copier. Aucun destinataire n’est configuré (Pro → Réglages)."; }
+  var quand = lead.slot ? " le "+lead.slot.l : " au prochain créneau disponible";
+  if (cab.mail){ a.href = 'mailto:'+encodeURIComponent(cab.mail)+'?subject='+encodeURIComponent('Rendez-vous'+(lead.slot?' '+lead.slot.l:'')+' — '+PROJET[i.projet])+'&body='+encodeURIComponent(txt); a.hidden=false; msg.textContent = "Rendez-vous demandé"+quand+". "+(cab.nom||"Le cabinet")+" vous confirme par SMS. Vous pouvez aussi envoyer la fiche par e-mail ou la copier."; }
+  else { a.hidden=true; msg.textContent = "Rendez-vous demandé"+quand+". Fiche prête à copier (aucun destinataire configuré : Pro → Réglages)."; }
   $('#lead-out').hidden=false;
-  try { var L = JSON.parse(localStorage.getItem('aiguilleur.leads')||'[]'); L.push({d:Date.now(), t:txt}); localStorage.setItem('aiguilleur.leads', JSON.stringify(L.slice(-50))); } catch(e){}
+  var mprR = R.routes.filter(function(r){ return (r.key==='mpr_geste'||r.key==='mpr_ampleur') && r.status==='oui'; })[0];
+  saveLead({d:Date.now(), slot:lead.slot, nom:lead.nom, tel:lead.tel, mail:lead.mail, cp:lead.cp, projet:PROJET[i.projet], cat:CAT[R.cat], mpr: mprR ? Math.round(R.plan?R.plan.mpr:mprR.montant) : 0, dpe:i.dpe||'?', type:i.type, t:txt});
 });
+function loadLeads(){ try { return JSON.parse(localStorage.getItem('aiguilleur.leads')||'[]') || []; } catch(e){ return []; } }
+function saveLead(L){ try { var all = loadLeads(); all.push(L); localStorage.setItem('aiguilleur.leads', JSON.stringify(all.slice(-50))); } catch(e){} renderDemandes(); }
+function renderDemandes(){
+  var all = loadLeads().filter(function(x){ return x && x.t; }).reverse();
+  var c = $('#dem-count'); c.textContent = all.length; c.hidden = !all.length;
+  var box = $('#tab-demandes'); if (!box) return;
+  if (!all.length){ box.innerHTML = '<div class="card empty">Aucune demande dans ce navigateur. Les rendez-vous pris depuis le parcours Particulier apparaissent ici, avec le créneau choisi et la simulation.</div>'; return; }
+  box.innerHTML = '<div class="row" style="justify-content:space-between"><h2>Demandes de rendez-vous</h2><button type="button" class="btn ghost" id="dem-clear">Tout effacer</button></div>' + all.map(function(L, k){
+    return '<div class="card demande"><div><div class="when">'+esc(L.slot ? "Rappel "+L.slot.l : "Rappel à convenir")+' · reçu le '+esc(new Date(L.d).toLocaleDateString('fr-FR'))+' '+esc(new Date(L.d).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}))+'</div><div class="who">'+esc(L.nom||'Sans nom')+' · '+esc(L.tel||'—')+(L.mail?' · '+esc(L.mail):'')+(L.cp?' · '+esc(L.cp):'')+'</div><div class="what">'+esc(L.projet||'')+' · '+esc(L.type==='appart'?'appartement':'maison')+' DPE '+esc(L.dpe||'?')+' · revenus '+esc(L.cat||'')+(L.mpr?' · MaPrimeRénov’ estimée '+eur(L.mpr):'')+'</div></div><div class="stack" style="gap:6px"><button type="button" class="btn" data-copy="'+k+'">Copier la fiche</button><button type="button" class="btn ghost" data-del="'+k+'">Supprimer</button></div></div>';
+  }).join('');
+  box.querySelectorAll('[data-copy]').forEach(function(b){ b.addEventListener('click', function(){ copyText(all[parseInt(b.getAttribute('data-copy'),10)].t, b); }); });
+  box.querySelectorAll('[data-del]').forEach(function(b){ b.addEventListener('click', function(){ var idx = parseInt(b.getAttribute('data-del'),10); var keep = all.filter(function(_,j){ return j!==idx; }).reverse(); try { localStorage.setItem('aiguilleur.leads', JSON.stringify(keep)); } catch(e){} renderDemandes(); }); });
+  var clr = $('#dem-clear'); if (clr) clr.addEventListener('click', function(){ try { localStorage.removeItem('aiguilleur.leads'); } catch(e){} renderDemandes(); });
+}
 $('#lead-copy').addEventListener('click', function(){ copyText($('#lead-txt').value, this); });
 function copyText(txt, btn){
   var done = function(){ var o = btn.textContent; btn.textContent = "Copié"; setTimeout(function(){ btn.textContent = o; }, 1500); };
@@ -1196,7 +1265,8 @@ $$('.tabs button').forEach(function(b){
   b.addEventListener('click', function(){
     var t = b.getAttribute('data-tab');
     $$('.tabs button').forEach(function(x){ x.classList.toggle('on', x===b); });
-    ['sim','copro','reforme','bareme','reglages'].forEach(function(k){ $('#tab-'+k).hidden = k!==t; });
+    ['sim','copro','reforme','bareme','demandes','reglages'].forEach(function(k){ $('#tab-'+k).hidden = k!==t; });
+    if (t==='demandes') renderDemandes();
   });
 });
 (function(){
@@ -1206,7 +1276,7 @@ $$('.tabs button').forEach(function(b){
     var cab = loadCab();
     if (!cab.nom){ saveCab({nom:q.cab||'', tel:q.tel||'', mail:q.mail||'', zone:q.zone||''}); }
   }
-  syncShow(fPart); syncShow(fPro); proProfile(); applyCab(); renderReforme(); renderBareme(); showStep(1);
+  syncShow(fPart); syncShow(fPro); proProfile(); applyCab(); renderReforme(); renderBareme(); renderDemandes(); showStep(1);
   $('#pro-result').innerHTML = proEmpty();
   if (q.vue==='pro') setMode('pro');
 })();
