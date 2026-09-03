@@ -167,6 +167,10 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 .demande .when{font-family:var(--mono);font-size:.86rem;color:var(--accent);font-weight:500}
 .demande .who{font-weight:600;margin-top:2px}
 .demande .what{font-size:.9rem;color:var(--muted);margin-top:2px}
+.src{font-family:var(--mono);font-size:.7rem;color:var(--muted);margin-left:6px;white-space:nowrap;vertical-align:baseline}
+.src a{color:inherit;text-decoration:none;border-bottom:1px dotted currentColor}
+.src a:hover{color:var(--accent)}
+h3 .src{font-weight:400}
 .count{display:inline-block;min-width:18px;padding:0 6px;border-radius:999px;background:var(--accent);color:var(--accent-ink);font-size:.72rem;font-weight:700;margin-left:6px;line-height:18px;text-align:center}
 .empty{padding:40px 20px;text-align:center;color:var(--muted)}
 .qualif{display:grid;gap:10px}
@@ -196,6 +200,7 @@ footer.foot{max-width:1240px;margin:28px auto 0;font-size:.8rem;color:var(--mute
   #print-area .neuf{border:1px solid #c00;color:#c00}
   #print-area .kpi{display:inline-block;border:1px solid #ccc;padding:6px 10px;margin:0 6px 6px 0}
   #print-area .hint{color:#555}
+  #print-area .src{color:#666;font-size:9px}#print-area .src a{border:0}
 }
 </style>
 
@@ -580,10 +585,19 @@ var PRESETS = [
 function num(v){ v = parseFloat(String(v==null?'':v).replace(/\s/g,'').replace(',','.')); return isFinite(v)? v : 0; }
 function eur(n){ return Math.round(n).toLocaleString('fr-FR') + ' €'; }
 function pct(x){ return (Math.round(x*1000)/10).toLocaleString('fr-FR') + ' %'; }
-function route(key, status, detail, montant){ return {key:key, name:ROUTE_NAME[key], status:status, detail:detail, montant:montant}; }
+/* Sources : les deux guides, page du fichier = page imprimée − 1 */
+var SRC_BASE = (location.hostname==='grignottegames.com') ? 'sources/' : 'https://grignottegames.com/pro/aiguilleur-48753991/sources/';
+var SRC_DOC = {anah:{f:'anah-aides-2026.pdf', l:'Anah', t:'Anah, Les aides financières en 2026, édition septembre 2026', off:-1}, mpr:{f:'mpr-mode-emploi-2026.pdf', l:'Mode d’emploi', t:'MaPrimeRénov’, le mode d’emploi, septembre 2026', off:-1}};
+function ref(doc, pages){ return [doc, [].concat(pages)]; }
+function srcHtml(list){
+  if (!list || !list.length) return '';
+  return list.map(function(s){ var D = SRC_DOC[s[0]]; if (!D) return ''; return '<span class="src" title="'+esc(D.t)+'">'+D.l+' p. '+s[1].map(function(p){ return '<a href="'+SRC_BASE+D.f+'#page='+(p+D.off)+'" target="_blank" rel="noopener">'+p+'</a>'; }).join(', ')+'</span>'; }).join('');
+}
+function srcTxt(list){ if (!list || !list.length) return ''; return ' ('+list.map(function(s){ var D = SRC_DOC[s[0]]; return D ? D.l+' p. '+s[1].join(', ') : ''; }).join(' ; ')+')'; }
+function route(key, status, detail, montant, src){ return {key:key, name:ROUTE_NAME[key], status:status, detail:detail, montant:montant, src:src}; }
 function stLabel(r){ return r.tag || ST_LABEL[r.status]; }
 function amtText(r){ if (r.amt!=null) return r.amt; if (r.montant==null) return ''; return (r.key==='ecoptz'||r.max?'≤ ':'')+eur(r.montant); }
-function vig(lvl, t){ return {lvl:lvl, t:t}; }
+function vig(lvl, t, src){ return {lvl:lvl, t:t, src:src}; }
 
 function categorie(rfr, nb, idf){
   var T = idf ? BAREME.plafonds.idf : BAREME.plafonds.hors;
@@ -620,11 +634,11 @@ function simulate(i){
   else R.tva = {taux:5.5, why:"Rénovation énergétique d’un logement de plus de 2 ans, travaux liés compris (PAC air/air incluse depuis le 1er septembre 2026)."+(fossileAmpleur?" La chaudière gaz ou fioul, elle, reste à 20 %.":"")};
 
   // Devis / CEE timing
-  if (i.devis==='plus14'){ ctx.ceeOK=false; R.vig.push(vig('bad',"Devis signé depuis plus de 14 jours sans engagement CEE préalable : le bénéfice de la prime CEE est perdu pour ces travaux.")); }
-  else if (i.devis==='moins14'){ R.vig.push(vig('warn',"Devis signé depuis moins de 14 jours : demander l’engagement CEE immédiatement, le délai court.")); }
+  if (i.devis==='plus14'){ ctx.ceeOK=false; R.vig.push(vig('bad',"Devis signé depuis plus de 14 jours sans engagement CEE préalable : le bénéfice de la prime CEE est perdu pour ces travaux.", [ref('anah',32)])); }
+  else if (i.devis==='moins14'){ R.vig.push(vig('warn',"Devis signé depuis moins de 14 jours : demander l’engagement CEE immédiatement, le délai court.", [ref('anah',32)])); }
 
-  if (!ctx.proprio) R.vig.push(vig('bad',"Locataire : MaPrimeRénov’ est réservée aux propriétaires. Les CEE restent accessibles (le locataire modeste ou le bailleur peut demander) et MaPrimeAdapt’ est ouverte aux locataires."));
-  if (i.acq==='oui') R.vig.push(vig('info',"Acquisition en cours : joindre le compromis de vente à la demande ; l’acte de vente définitif sera exigé pour tout paiement (avance, acompte, solde)."));
+  if (!ctx.proprio) R.vig.push(vig('bad',"Locataire : MaPrimeRénov’ est réservée aux propriétaires. Les CEE restent accessibles (le locataire modeste ou le bailleur peut demander) et MaPrimeAdapt’ est ouverte aux locataires.", [ref('anah',[12,31,55])]));
+  if (i.acq==='oui') R.vig.push(vig('info',"Acquisition en cours : joindre le compromis de vente à la demande ; l’acte de vente définitif sera exigé pour tout paiement (avance, acompte, solde).", [ref('anah',12)]));
 
   if (i.projet==='ampleur') ampleur(i,R,ctx); else geste(i,R,ctx);
   ecoptz(i,R,ctx);
@@ -632,18 +646,18 @@ function simulate(i){
   // Bailleur
   if (ctx.loue){
     var cal = {G:"interdit à la location depuis le 1er janvier 2025", F:"interdit à la location à partir de 2028", E:"interdit à la location à partir de 2034"};
-    if (cal[i.dpe]) R.vig.push(vig(i.dpe==='G'?'bad':'warn', "Logement classé "+i.dpe+" : "+cal[i.dpe]+". La rénovation conditionne le maintien du revenu locatif."));
-    R.vig.push(vig('info',"Engagements bailleur : louer en résidence principale dans l’an suivant le solde, pendant 6 ans (remboursement d’1/6 par année non louée), sans répercuter l’aide sur le loyer. Location à un ascendant ou descendant admise. Par geste : 3 logements différents au plus, 20 000 € d’aide par logement sur 5 ans."));
-    R.routes.push(route('locav','info',"Jusqu’au 31 décembre 2027 : réduction d’impôt de 15 à 65 % contre un loyer plafonné, logement non meublé loué 6 ans à un locataire modeste hors famille. Subvention travaux : 25 % HT jusqu’à 15 000 € (rénovation énergétique, gain ≥ 35 %), 35 % jusqu’à 21 000 ou 28 000 € en habitat dégradé. Classe D après travaux, Accompagnateur Rénov’ requis."));
+    if (cal[i.dpe]) R.vig.push(vig(i.dpe==='G'?'bad':'warn', "Logement classé "+i.dpe+" : "+cal[i.dpe]+". La rénovation conditionne le maintien du revenu locatif.", [ref('mpr',8)]));
+    R.vig.push(vig('info',"Engagements bailleur : louer en résidence principale dans l’an suivant le solde, pendant 6 ans (remboursement d’1/6 par année non louée), sans répercuter l’aide sur le loyer. Location à un ascendant ou descendant admise. Par geste : 3 logements différents au plus, 20 000 € d’aide par logement sur 5 ans.", [ref('anah',[12,13,18,27])]));
+    R.routes.push(route('locav','info',"Jusqu’au 31 décembre 2027 : réduction d’impôt de 15 à 65 % contre un loyer plafonné, logement non meublé loué 6 ans à un locataire modeste hors famille. Subvention travaux : 25 % HT jusqu’à 15 000 € (rénovation énergétique, gain ≥ 35 %), 35 % jusqu’à 21 000 ou 28 000 € en habitat dégradé. Classe D après travaux, Accompagnateur Rénov’ requis.", undefined, [ref('anah',[29,30])]));
   }
 
   // MaPrimeAdapt'
   if (i.adapt==='oui'){
-    if (c.cat<=1){ var ta = BAREME.adapt.taux[c.cat]; var ra = route('adapt','oui', pct(ta)+" d’un plafond de "+eur(BAREME.adapt.plafond)+" HT de travaux d’adaptation (douche de plain-pied, monte-escalier, rampe…). AMO obligatoire (forfait 600 à 800 € TTC pris en charge), diagnostic logement autonomie. Avance possible jusqu’à 30 %, sauf avec un mandataire financier. Seconde demande possible dans les 5 ans sur le reliquat du plafond. Cumulable avec la rénovation énergétique, plafonds dissociés.", ta*BAREME.adapt.plafond); ra.max = true; R.routes.push(ra); }
-    else R.routes.push(route('adapt','non',"Réservée aux ménages modestes et très modestes."));
+    if (c.cat<=1){ var ta = BAREME.adapt.taux[c.cat]; var ra = route('adapt','oui', pct(ta)+" d’un plafond de "+eur(BAREME.adapt.plafond)+" HT de travaux d’adaptation (douche de plain-pied, monte-escalier, rampe…). AMO obligatoire (forfait 600 à 800 € TTC pris en charge), diagnostic logement autonomie. Avance possible jusqu’à 30 %, sauf avec un mandataire financier. Seconde demande possible dans les 5 ans sur le reliquat du plafond. Cumulable avec la rénovation énergétique, plafonds dissociés.", ta*BAREME.adapt.plafond, [ref('anah',[55,56,58])]); ra.max = true; R.routes.push(ra); }
+    else R.routes.push(route('adapt','non',"Réservée aux ménages modestes et très modestes.", undefined, [ref('anah',55)]));
   }
 
-  var rt = route('tva', R.tva.taux===5.5?'oui':'info', R.tva.why + (R.tva.taux===5.5?" Le client atteste l’ancienneté et la nature des travaux sur le devis.":""));
+  var rt = route('tva', R.tva.taux===5.5?'oui':'info', R.tva.why + (R.tva.taux===5.5?" Le client atteste l’ancienneté et la nature des travaux sur le devis.":""), undefined, [ref('anah',[33,34])]);
   rt.tag = R.tva.taux===5.5 ? "Réduite" : "Pleine"; rt.amt = String(R.tva.taux).replace('.',',')+" %";
   if (i.projet==='pac_air_air' && R.tva.taux===5.5) rt.neuf = true;
   R.routes.push(rt);
@@ -660,34 +674,34 @@ function ampleur(i,R,ctx){
   var decarb = i.chauf!=='fossile';
   var passoire = /^[EFG]$/.test(i.dpe||'');
   if (!ctx.proprio){
-    R.routes.push(route('mpr_ampleur','non',"Réservée aux propriétaires (occupants ou bailleurs), usufruitiers, associés de SCI occupants et propriétaires modestes hébergeant à titre gratuit."));
-    if (ctx.ancien2 && ctx.ceeOK) R.routes.push(route('cee','info',"Un locataire modeste ou très modeste peut demander une prime CEE en justifiant sa situation ; sinon la demande revient au bailleur. À obtenir avant signature du devis."));
+    R.routes.push(route('mpr_ampleur','non',"Réservée aux propriétaires (occupants ou bailleurs), usufruitiers, associés de SCI occupants et propriétaires modestes hébergeant à titre gratuit.", undefined, [ref('anah',17)]));
+    if (ctx.ancien2 && ctx.ceeOK) R.routes.push(route('cee','info',"Un locataire modeste ou très modeste peut demander une prime CEE en justifiant sa situation ; sinon la demande revient au bailleur. À obtenir avant signature du devis.", undefined, [ref('anah',31)]));
     return;
   }
-  if (ctx.gratuit && ctx.cat>1){ R.routes.push(route('mpr_ampleur','non',"Un propriétaire hébergeant à titre gratuit n’est éligible qu’avec des revenus modestes ou très modestes.")); return; }
+  if (ctx.gratuit && ctx.cat>1){ R.routes.push(route('mpr_ampleur','non',"Un propriétaire hébergeant à titre gratuit n’est éligible qu’avec des revenus modestes ou très modestes.", undefined, [ref('anah',17)])); return; }
   if (!passoire){
     if (i.dpe){
-      R.routes.push(route('mpr_ampleur','non',"Logement classé "+i.dpe+" : la rénovation d’ampleur MaPrimeRénov’ est réservée aux classes E, F et G."));
-      R.vig.push(vig('warn',"Hors E, F ou G : orienter vers un geste chauffage (PAC) financé par MaPrimeRénov’ + CEE, ou des travaux financés par les seuls CEE."));
+      R.routes.push(route('mpr_ampleur','non',"Logement classé "+i.dpe+" : la rénovation d’ampleur MaPrimeRénov’ est réservée aux classes E, F et G.", undefined, [ref('anah',18)]));
+      R.vig.push(vig('warn',"Hors E, F ou G : orienter vers un geste chauffage (PAC) financé par MaPrimeRénov’ + CEE, ou des travaux financés par les seuls CEE.", [ref('anah',18)]));
     } else {
-      R.routes.push(route('mpr_ampleur','info',"DPE inconnu : la rénovation d’ampleur exige un logement classé E, F ou G avant travaux. La classe est établie par l’audit énergétique de l’Accompagnateur Rénov’. Faire établir un DPE ou l’audit, puis recalculer."));
+      R.routes.push(route('mpr_ampleur','info',"DPE inconnu : la rénovation d’ampleur exige un logement classé E, F ou G avant travaux. La classe est établie par l’audit énergétique de l’Accompagnateur Rénov’. Faire établir un DPE ou l’audit, puis recalculer.", undefined, [ref('anah',[18,19])]));
     }
     return;
   }
   if (!ctx.ancien15 || ctx.rs){
-    R.routes.push(route('mpr_ampleur','non', (ctx.rs?"Résidence secondaire":"Logement de moins de 15 ans")+" : hors MaPrimeRénov’."));
-    if (decarb && ctx.ceeOK){ var rc = route('cee_ampleur','oui',"Ouvert aux résidences secondaires et aux logements de moins de 15 ans classés E, F ou G, si le projet est décarboné. Montant fixé par le fournisseur d’énergie, à obtenir avant signature du devis."); rc.neuf = true; R.routes.push(rc); }
-    else if (!decarb) R.routes.push(route('cee_ampleur','non',"Exige un projet décarboné : un chauffage gaz ou fioul conservé ferme cette porte."));
+    R.routes.push(route('mpr_ampleur','non', (ctx.rs?"Résidence secondaire":"Logement de moins de 15 ans")+" : hors MaPrimeRénov’.", undefined, [ref('anah',18)]));
+    if (decarb && ctx.ceeOK){ var rc = route('cee_ampleur','oui',"Ouvert aux résidences secondaires et aux logements de moins de 15 ans classés E, F ou G, si le projet est décarboné. Montant fixé par le fournisseur d’énergie, à obtenir avant signature du devis.", undefined, [ref('anah',[7,32])]); rc.neuf = true; R.routes.push(rc); }
+    else if (!decarb) R.routes.push(route('cee_ampleur','non',"Exige un projet décarboné : un chauffage gaz ou fioul conservé ferme cette porte.", undefined, [ref('anah',32)]));
     return;
   }
   if (ctx.maison && !decarb){
-    var rm = route('mpr_ampleur','non',"Depuis le 1er septembre 2026, une rénovation d’ampleur en maison individuelle ne peut ni installer ni conserver un chauffage ou une production d’eau chaude au gaz, au fioul ou au charbon."); rm.neuf = true; R.routes.push(rm);
-    R.routes.push(route('cee_ampleur','non',"Réservé aux résidences secondaires et logements de moins de 15 ans, et exige un projet décarboné."));
-    R.vig.push(vig('bad',"Refus assuré tant que le chauffage fossile est conservé. Intégrer une PAC ou un raccordement au réseau de chaleur dans le scénario, puis recalculer."));
+    var rm = route('mpr_ampleur','non',"Depuis le 1er septembre 2026, une rénovation d’ampleur en maison individuelle ne peut ni installer ni conserver un chauffage ou une production d’eau chaude au gaz, au fioul ou au charbon.", undefined, [ref('anah',[7,19])]); rm.neuf = true; R.routes.push(rm);
+    R.routes.push(route('cee_ampleur','non',"Réservé aux résidences secondaires et logements de moins de 15 ans, et exige un projet décarboné.", undefined, [ref('anah',32)]));
+    R.vig.push(vig('bad',"Refus assuré tant que le chauffage fossile est conservé. Intégrer une PAC ou un raccordement au réseau de chaleur dans le scénario, puis recalculer.", [ref('anah',19)]));
     return;
   }
   if (i.iso2==='non'){
-    R.routes.push(route('mpr_ampleur','non',"Le programme doit comprendre au moins deux gestes d’isolation parmi murs, planchers bas, toiture et fenêtres (au moins 25 % des surfaces par poste choisi, guide Anah p. 54)."));
+    R.routes.push(route('mpr_ampleur','non',"Le programme doit comprendre au moins deux gestes d’isolation parmi murs, planchers bas, toiture et fenêtres (au moins 25 % des surfaces par poste choisi).", undefined, [ref('anah',[19,54])]));
     return;
   }
   var taux = BAREME.ampleur.taux[ctx.cat];
@@ -698,14 +712,14 @@ function ampleur(i,R,ctx){
   var marPrix = Math.min(num(i.mar)||2000, BAREME.ampleur.marPlafond);
   var marAide = BAREME.ampleur.marTaux[ctx.cat]*marPrix;
   R.m.ampleur = {taux:taux, plafond:plafond, base:base, aide:aide, ecret:ecret, marAide:marAide, marTaux:BAREME.ampleur.marTaux[ctx.cat], gain:gain, ht:ht, ttc:ttc};
-  R.routes.push(route('mpr_ampleur','oui', pct(taux)+" du montant HT des travaux éligibles (travaux induits et confort d’été compris), plafond "+eur(plafond)+" HT pour un gain de "+(gain===3?"3 classes ou plus":"2 classes")+(ht>0?"":" — montant calculé sur le plafond, faute de devis")+".", aide));
-  R.routes.push(route('mar','oui',"Accompagnement obligatoire, pris en charge à "+pct(BAREME.ampleur.marTaux[ctx.cat])+" dans la limite de 2 000 € TTC (4 000 € si prestation renforcée habitat indigne).", marAide));
-  R.routes.push(route('cee','integre',"Les CEE sont valorisés directement dans le dossier MaPrimeRénov’ : pas de prime CEE séparée pour les mêmes travaux."));
-  if (ctx.cat<=1 && ctx.po) R.vig.push(vig('ok',"Avance possible jusqu’à 30 % de l’aide : devis signé avec acompte, demande avant travaux et dans les 6 mois suivant l’accord. Versée au bénéficiaire, jamais au mandataire."));
-  R.vig.push(vig('warn',"Écrêtement : l’ensemble des aides publiques et privées ne peut dépasser "+pct(ecret)+" du montant TTC des travaux, dans la limite du plafond de dépenses éligibles."));
-  if (!decarb) R.vig.push(vig('info',"Appartement avec chauffage gaz conservé : admis en rénovation d’ampleur, mais la chaudière elle-même n’est ni financée, ni au taux réduit de TVA, ni couverte par l’éco-PTZ."));
-  if (ctx.cat===3) R.vig.push(vig('info',"Revenus supérieurs : 10 % seulement, mais l’éco-PTZ MaPrimeRénov’ (50 000 € sur 20 ans) reste ouvert sans condition de ressources."));
-  R.vig.push(vig('info',"Rénovation en deux étapes possible dans les 5 ans, avec plafond majoré : atteindre au moins la classe C (logements F et G) ou B (logements E) à la seconde étape ; le plafond de la seconde étape correspond au gain total des deux étapes, déduction faite de la dépense financée en première étape."));
+  R.routes.push(route('mpr_ampleur','oui', pct(taux)+" du montant HT des travaux éligibles (travaux induits et confort d’été compris), plafond "+eur(plafond)+" HT pour un gain de "+(gain===3?"3 classes ou plus":"2 classes")+(ht>0?"":" — montant calculé sur le plafond, faute de devis")+".", aide, [ref('anah',[19,20,22])]));
+  R.routes.push(route('mar','oui',"Accompagnement obligatoire, pris en charge à "+pct(BAREME.ampleur.marTaux[ctx.cat])+" dans la limite de 2 000 € TTC (4 000 € si prestation renforcée habitat indigne).", marAide, [ref('anah',[20,21])]));
+  R.routes.push(route('cee','integre',"Les CEE sont valorisés directement dans le dossier MaPrimeRénov’ : pas de prime CEE séparée pour les mêmes travaux.", undefined, [ref('anah',27), ref('mpr',18)]));
+  if (ctx.cat<=1 && ctx.po) R.vig.push(vig('ok',"Avance possible jusqu’à 30 % de l’aide : devis signé avec acompte, demande avant travaux et dans les 6 mois suivant l’accord. Versée au bénéficiaire, jamais au mandataire.", [ref('anah',22)]));
+  R.vig.push(vig('warn',"Écrêtement : l’ensemble des aides publiques et privées ne peut dépasser "+pct(ecret)+" du montant TTC des travaux, dans la limite du plafond de dépenses éligibles.", [ref('anah',[22,27])]));
+  if (!decarb) R.vig.push(vig('info',"Appartement avec chauffage gaz conservé : admis en rénovation d’ampleur, mais la chaudière elle-même n’est ni financée, ni au taux réduit de TVA, ni couverte par l’éco-PTZ.", [ref('anah',[33,41]), ref('mpr',23)]));
+  if (ctx.cat===3) R.vig.push(vig('info',"Revenus supérieurs : 10 % seulement, mais l’éco-PTZ MaPrimeRénov’ (50 000 € sur 20 ans) reste ouvert sans condition de ressources.", [ref('anah',[22,41])]));
+  R.vig.push(vig('info',"Rénovation en deux étapes possible dans les 5 ans, avec plafond majoré : atteindre au moins la classe C (logements F et G) ou B (logements E) à la seconde étape ; le plafond de la seconde étape correspond au gain total des deux étapes, déduction faite de la dépense financée en première étape.", [ref('anah',23)]));
 }
 
 function geste(i,R,ctx){
@@ -714,20 +728,20 @@ function geste(i,R,ctx){
   var cuve = i.cuve==='oui' && i.fossile==='fioul';
   var remplace = i.fossile && i.fossile!=='non';
   if (p==='gaz'){
-    R.routes.push(route('mpr_geste','non',"Les chaudières gaz ne sont plus financées par l’Anah, ni par le coup de pouce CEE, ni par l’éco-PTZ."));
-    R.routes.push(route('cee','non',"Pas de coup de pouce pour une chaudière à combustible fossile."));
-    R.vig.push(vig('bad',"Aucune aide Anah et TVA à 20 %. Une PAC air/eau remplaçant cette chaudière ouvre MaPrimeRénov’ et le coup de pouce CEE."));
+    R.routes.push(route('mpr_geste','non',"Les chaudières gaz ne sont plus financées par l’Anah, ni par le coup de pouce CEE, ni par l’éco-PTZ.", undefined, [ref('anah',[14,32,41])]));
+    R.routes.push(route('cee','non',"Pas de coup de pouce pour une chaudière à combustible fossile.", undefined, [ref('anah',32)]));
+    R.vig.push(vig('bad',"Aucune aide Anah et TVA à 20 %. Une PAC air/eau remplaçant cette chaudière ouvre MaPrimeRénov’ et le coup de pouce CEE.", [ref('anah',[15,32,33])]));
     return;
   }
   if (G[p]){
-    var ok = true, why = '';
+    var ok = true, why = '', whySrc = [ref('anah',12)];
     if (!ctx.proprio){ ok=false; why="Réservée aux propriétaires."; }
-    else if (ctx.gratuit){ ok=false; why="Un propriétaire hébergeant à titre gratuit n’est éligible qu’à la rénovation d’ampleur."; }
-    else if (ctx.rs){ ok=false; why="Résidence secondaire : hors MaPrimeRénov’."; }
-    else if (ctx.cat===3){ ok=false; why="Revenus supérieurs : pas de forfait par geste. La prime CEE reste ouverte."; }
+    else if (ctx.gratuit){ ok=false; why="Un propriétaire hébergeant à titre gratuit n’est éligible qu’à la rénovation d’ampleur."; whySrc=[ref('anah',[12,17])]; }
+    else if (ctx.rs){ ok=false; why="Résidence secondaire : hors MaPrimeRénov’."; whySrc=[ref('anah',13)]; }
+    else if (ctx.cat===3){ ok=false; why="Revenus supérieurs : pas de forfait par geste. La prime CEE reste ouverte."; whySrc=[ref('anah',[12,15]), ref('mpr',28)]; }
     else if (!ctx.ancien15){
-      if (cuve) R.vig.push(vig('info',"Logement de moins de 15 ans : éligible par exception car le projet remplace une chaudière fioul avec dépose de cuve. Les deux primes se demandent en même temps."));
-      else { ok=false; why="Logement de moins de 15 ans. Seule exception : remplacer une chaudière fioul en demandant en même temps la prime « dépose de cuve »."; }
+      if (cuve) R.vig.push(vig('info',"Logement de moins de 15 ans : éligible par exception car le projet remplace une chaudière fioul avec dépose de cuve. Les deux primes se demandent en même temps.", [ref('anah',13)]));
+      else { ok=false; why="Logement de moins de 15 ans. Seule exception : remplacer une chaudière fioul en demandant en même temps la prime « dépose de cuve »."; whySrc=[ref('anah',13)]; }
     }
     if (ok){
       var items = [[p, G[p].forfait[ctx.cat], G[p].plafond]];
@@ -736,7 +750,7 @@ function geste(i,R,ctx){
       var forfait = 0, plafond = 0;
       items.forEach(function(x){ forfait += x[1]; plafond += x[2]; });
       var brut = forfait, mpr5 = num(i.mpr5), reliquat = Math.max(0, BAREME.cumul5ans - mpr5);
-      if (forfait > reliquat){ forfait = reliquat; R.vig.push(vig('warn',"Limite de 20 000 € par logement sur 5 ans (formulation Anah) : "+eur(mpr5)+" déjà perçus, forfait ramené de "+eur(brut)+" à "+eur(forfait)+".")); }
+      if (forfait > reliquat){ forfait = reliquat; R.vig.push(vig('warn',"Limite de 20 000 € par logement sur 5 ans (formulation Anah) : "+eur(mpr5)+" déjà perçus, forfait ramené de "+eur(brut)+" à "+eur(forfait)+".", [ref('anah',27)])); }
       var ecret = BAREME.ecretGeste[ctx.cat];
       var depense = ttc>0 ? Math.min(ttc, plafond) : plafond;
       var cap = ecret*depense;
@@ -744,11 +758,11 @@ function geste(i,R,ctx){
       var det = items.map(function(x){ return G[x[0]].label+" "+eur(x[1]); }).join(" + ")+". Plafond de dépense éligible "+eur(plafond)+" TTC.";
       if (p==='reseau') det += " Réseau alimenté majoritairement par des énergies renouvelables ou une cogénération.";
       if (i.audit==='oui') det += " L’audit n’est aidé qu’une fois par logement.";
-      R.routes.push(route('mpr_geste','oui', det, forfait));
-      if (ctx.cat===0) R.vig.push(vig('ok',"Avance possible jusqu’à 50 % de la prime pour les ménages très modestes."));
-      R.vig.push(vig('warn',"Écrêtement : MaPrimeRénov’ + CEE ne peuvent dépasser "+pct(ecret)+" de la dépense éligible"+(ttc>0?" ("+eur(cap)+")":"")+". Avec les aides locales, 100 % au plus."));
+      R.routes.push(route('mpr_geste','oui', det, forfait, [ref('anah',[14,15,16])]));
+      if (ctx.cat===0) R.vig.push(vig('ok',"Avance possible jusqu’à 50 % de la prime pour les ménages très modestes.", [ref('anah',15)]));
+      R.vig.push(vig('warn',"Écrêtement : MaPrimeRénov’ + CEE ne peuvent dépasser "+pct(ecret)+" de la dépense éligible"+(ttc>0?" ("+eur(cap)+")":"")+". Avec les aides locales, 100 % au plus.", [ref('anah',[16,27])]));
     } else {
-      R.routes.push(route('mpr_geste','non', why));
+      R.routes.push(route('mpr_geste','non', why, undefined, whySrc));
     }
   } else {
     var msgs = {
@@ -759,12 +773,12 @@ function geste(i,R,ctx){
       solaire: "Depuis le 1er septembre 2026, le solaire thermique n’est plus financé par MaPrimeRénov’ en geste isolé. Nouvelle bonification CEE si le chauffage et/ou l’eau chaude du logement sont entièrement décarbonés après travaux.",
       pac_air_air: "La PAC air/air n’est éligible ni à MaPrimeRénov’ ni à l’éco-PTZ. CEE possibles si SCOP ≥ 3,9. TVA abaissée à 5,5 % depuis le 1er septembre 2026."
     };
-    var rn = route('mpr_geste','non', msgs[p] || "Hors MaPrimeRénov’."); rn.neuf = true; R.routes.push(rn);
-    if (p==='isolation' && /^[EFG]$/.test(i.dpe||'') && ctx.ancien15 && ctx.proprio && !ctx.rs) R.vig.push(vig('info',"Logement E, F ou G : en ajoutant une seconde paroi et un chauffage décarboné, une rénovation d’ampleur ouvre jusqu’à "+pct(BAREME.ampleur.taux[ctx.cat])+" de MaPrimeRénov’ sur 30 000 à 40 000 € HT."));
+    var rn = route('mpr_geste','non', msgs[p] || "Hors MaPrimeRénov’.", undefined, [ref('anah', p==='pac_air_air' ? [7,46] : [7,14])]); rn.neuf = true; R.routes.push(rn);
+    if (p==='isolation' && /^[EFG]$/.test(i.dpe||'') && ctx.ancien15 && ctx.proprio && !ctx.rs) R.vig.push(vig('info',"Logement E, F ou G : en ajoutant une seconde paroi et un chauffage décarboné, une rénovation d’ampleur ouvre jusqu’à "+pct(BAREME.ampleur.taux[ctx.cat])+" de MaPrimeRénov’ sur 30 000 à 40 000 € HT.", [ref('anah',[17,22])]));
   }
   // CEE
-  if (!ctx.ancien2){ R.routes.push(route('cee','non',"Logement de moins de 2 ans : hors CEE.")); }
-  else if (!ctx.ceeOK){ R.routes.push(route('cee','non',"Devis signé depuis plus de 14 jours sans engagement CEE préalable.")); }
+  if (!ctx.ancien2){ R.routes.push(route('cee','non',"Logement de moins de 2 ans : hors CEE.", undefined, [ref('anah',31)])); }
+  else if (!ctx.ceeOK){ R.routes.push(route('cee','non',"Devis signé depuis plus de 14 jours sans engagement CEE préalable.", undefined, [ref('anah',32)])); }
   else {
     var d = "Montant fixé par le fournisseur d’énergie ou son délégataire, à obtenir par écrit avant la signature du devis. Cumulable avec MaPrimeRénov’ dans la limite de l’écrêtement.";
     var cdp = BAREME.cee.coupDePouce, neuf = false;
@@ -773,23 +787,23 @@ function geste(i,R,ctx){
     if (p==='pac_air_air') d = "Prime possible si le SCOP est ≥ 3,9, à obtenir avant signature du devis.";
     if (p==='cet'||p==='solaire'){ d = "Bonification depuis le 1er septembre 2026, à condition de décarboner entièrement le chauffage et/ou l’eau chaude sanitaire. À obtenir avant signature du devis."; neuf = true; }
     if (p==='isolation') d = "Fiches d’opérations standardisées (murs R ≥ 3,7 ; combles perdus R ≥ 7 ; rampants R ≥ 6 ; planchers R ≥ 3 ; fenêtres Uw ≤ 1,3). "+d;
-    var rc = route('cee','oui', d); if (neuf) rc.neuf = true; R.routes.push(rc);
+    var rc = route('cee','oui', d, undefined, [ref('anah', p==='pac_air_air' ? [32,46] : p==='isolation' ? [31,48,49] : [31,32])]); if (neuf) rc.neuf = true; R.routes.push(rc);
   }
 }
 
 function ecoptz(i,R,ctx){
   var p = i.projet, E = BAREME.ecoptz;
-  if (p==='gaz'||p==='pac_air_air'){ R.routes.push(route('ecoptz','non', p==='gaz'?"Pas d’éco-PTZ pour une chaudière gaz.":"La PAC air/air n’est pas éligible à l’éco-PTZ.")); return; }
-  if (!ctx.ancien2){ R.routes.push(route('ecoptz','non',"Logement achevé depuis moins de 2 ans.")); return; }
-  if (!ctx.rp){ R.routes.push(route('ecoptz','non',"Réservé à la résidence principale, ou destinée à le devenir.")); return; }
-  if (!ctx.proprio){ R.routes.push(route('ecoptz','non',"Réservé aux propriétaires et aux SCI non soumises à l’IS.")); return; }
+  if (p==='gaz'||p==='pac_air_air'){ R.routes.push(route('ecoptz','non', p==='gaz'?"Pas d’éco-PTZ pour une chaudière gaz.":"La PAC air/air n’est pas éligible à l’éco-PTZ.", undefined, [ref('anah', p==='gaz'?41:46)])); return; }
+  if (!ctx.ancien2){ R.routes.push(route('ecoptz','non',"Logement achevé depuis moins de 2 ans.", undefined, [ref('anah',40)])); return; }
+  if (!ctx.rp){ R.routes.push(route('ecoptz','non',"Réservé à la résidence principale, ou destinée à le devenir.", undefined, [ref('anah',40)])); return; }
+  if (!ctx.proprio){ R.routes.push(route('ecoptz','non',"Réservé aux propriétaires et aux SCI non soumises à l’IS.", undefined, [ref('anah',40)])); return; }
   var plafond, duree, d;
   var commun = " Un seul par logement, complémentaire possible dans les 5 ans pour d’autres travaux ; 3 ans pour réaliser les travaux ; travaux commencés depuis moins de 3 mois admis."+(ctx.loue?" Bailleur : louer en résidence principale dans les 6 mois suivant la clôture du dossier.":"");
   if (R.m.ampleur || R.m.geste){ plafond=E.global; duree=20; d="Éco-PTZ MaPrimeRénov’ : finance le reste à charge jusqu’à 50 000 € sur 20 ans, sans condition de ressources. La notification d’octroi Anah remplace les devis auprès de la banque ; 6 mois pour le débloquer."+(i.chauf==='fossile'&&p==='ampleur'?" La chaudière gaz reste exclue du prêt.":""); }
   else if (p==='ampleur'){ plafond=E.global; duree=20; d="Éco-PTZ « performance énergétique globale » : jusqu’à 50 000 € sur 20 ans si l’audit justifie un saut de 2 classes et une classe E au moins après travaux."+(i.chauf==='fossile'?" La chaudière gaz reste exclue du prêt.":""); }
   else { plafond=E.seul; duree=15; d="Éco-PTZ « action seule » : jusqu’à 15 000 € sur 15 ans (7 000 € pour les seules parois vitrées ; 25 000 € pour 2 actions, 30 000 € pour 3), sous réserve de la liste des actions éligibles. Sans condition de ressources, travaux RGE."; }
   R.m.ecoptz = {plafond:plafond, duree:duree};
-  R.routes.push(route('ecoptz','oui', d+commun, plafond));
+  R.routes.push(route('ecoptz','oui', d+commun, plafond, [ref('anah',[40,41,42,43])]));
 }
 
 function plan(i,R){
@@ -804,14 +818,14 @@ function plan(i,R){
     var baseA = ttc;
     if (BAREME.ampleur.ecretBase==='plafond' && A.ht>0 && A.ht>A.plafond) baseA = Math.round(A.plafond * ttc / A.ht);
     var capA = A.ecret*baseA;
-    if (mpr+locales > capA){ mpr = Math.max(0, capA-locales); note.push("MaPrimeRénov’ réduite par l’écrêtement : "+pct(A.ecret)+" du TTC dans la limite du plafond de dépenses éligibles ("+eur(baseA)+" TTC, guide Anah p. 22)."); }
-    if (cee>0) note.push("Les CEE sont intégrés au dossier MaPrimeRénov’ : la prime CEE saisie n’est pas comptée séparément.");
+    if (mpr+locales > capA){ mpr = Math.max(0, capA-locales); note.push({t:"MaPrimeRénov’ réduite par l’écrêtement : "+pct(A.ecret)+" du TTC dans la limite du plafond de dépenses éligibles ("+eur(baseA)+" TTC).", src:[ref('anah',22)]}); }
+    if (cee>0) note.push({t:"Les CEE sont intégrés au dossier MaPrimeRénov’ : la prime CEE saisie n’est pas comptée séparément.", src:[ref('anah',27)]});
     cee = 0;
   } else if (Gm){
     mpr = Gm.forfait;
     var dep = Math.min(ttc, Gm.plafond), capG = Gm.ecret*dep;
-    if (mpr+cee > capG){ mpr = Math.max(0, capG-cee); note.push("MaPrimeRénov’ réduite par l’écrêtement MaPrimeRénov’ + CEE à "+pct(Gm.ecret)+" de la dépense éligible ("+eur(dep)+")."); }
-    if (mpr+cee+locales > dep){ mpr = Math.max(0, mpr-(mpr+cee+locales-dep)); note.push("Total des aides plafonné à 100 % de la dépense éligible ("+eur(dep)+")."); }
+    if (mpr+cee > capG){ mpr = Math.max(0, capG-cee); note.push({t:"MaPrimeRénov’ réduite par l’écrêtement MaPrimeRénov’ + CEE à "+pct(Gm.ecret)+" de la dépense éligible ("+eur(dep)+").", src:[ref('anah',[16,27])]}); }
+    if (mpr+cee+locales > dep){ mpr = Math.max(0, mpr-(mpr+cee+locales-dep)); note.push({t:"Total des aides plafonné à 100 % de la dépense éligible ("+eur(dep)+").", src:[ref('anah',[16,27])]}); }
   }
   var reste = Math.max(0, ttc-mpr-cee-locales);
   var E = R.m.ecoptz, pret = E ? Math.min(reste, E.plafond) : 0;
@@ -826,9 +840,9 @@ function copro(c){
   if (!c.ans15) manques.push("immeuble de moins de 15 ans");
   if (!c.rp) manques.push("part de résidences principales insuffisante");
   if (!c.immat) manques.push("immatriculation non à jour");
-  if (manques.length){ out.ok=false; out.vig.push(vig('bad',"Conditions non remplies : "+manques.join(", ")+".")); return out; }
-  if (gain < B.seuilGain[0] && !c.petite){ out.ok=false; out.vig.push(vig('bad',"Gain énergétique inférieur à 35 % : hors MaPrimeRénov’ Copropriété. Exception : expérimentation « petites copropriétés » (20 lots ou moins, suivie par la collectivité, audit ou DTG, gain ≥ 15 %, jusqu’en 2029).")); return out; }
-  if (c.petite && gain < B.petite.gainMin){ out.ok=false; out.vig.push(vig('bad',"Le régime « petites copropriétés » exige un gain d’au moins 15 %.")); return out; }
+  if (manques.length){ out.ok=false; out.vig.push(vig('bad',"Conditions non remplies : "+manques.join(", ")+".", [ref('anah',24), ref('mpr',10)])); return out; }
+  if (gain < B.seuilGain[0] && !c.petite){ out.ok=false; out.vig.push(vig('bad',"Gain énergétique inférieur à 35 % : hors MaPrimeRénov’ Copropriété. Exception : expérimentation « petites copropriétés » (20 lots ou moins, suivie par la collectivité, audit ou DTG, gain ≥ 15 %, jusqu’en 2029).", [ref('anah',[24,26])])); return out; }
+  if (c.petite && gain < B.petite.gainMin){ out.ok=false; out.vig.push(vig('bad',"Le régime « petites copropriétés » exige un gain d’au moins 15 %.", [ref('anah',26)])); return out; }
   var taux = gain>=B.seuilGain[1] ? B.taux[1] : B.taux[0];
   if (c.passoire) taux += B.passoire;
   if (c.fragile) taux += B.fragile;
@@ -839,10 +853,10 @@ function copro(c){
   out.amoDepense = amoPrix>0 ? Math.min(amoPrix, Math.max(amoPlafond, B.amo.plancher)) : 0;
   out.amo = B.amo.taux*out.amoDepense;
   out.amoPlafond = amoPlafond;
-  if (c.fragile) out.vig.push(vig('warn',"Bonification « fragile » : +20 points sous condition de valorisation exclusive des CEE par l’Anah. Pas de prime CEE séparée."));
-  else out.vig.push(vig('ok',"Copropriété non fragile : MaPrimeRénov’ Copropriété se cumule avec les CEE et avec un éco-PTZ « copropriétés »."));
-  if (c.passoire) out.vig.push(vig('ok',"Sortie de passoire (F ou G vers D au moins) : +10 points."));
-  out.vig.push(vig('info',"Les copropriétaires gardent leurs aides individuelles (MaPrimeRénov’ par geste ou d’ampleur) pour leurs parties privatives. Maîtrise d’œuvre obligatoire au-delà de 100 000 € de travaux. Méthodes d’évaluation libres jusqu’au 31 décembre 2026, puis 3CL-DPE 2021. AMO : lecture du plancher de 3 000 € comme plancher de dépense, à confirmer auprès de l’Anah."));
+  if (c.fragile) out.vig.push(vig('warn',"Bonification « fragile » : +20 points sous condition de valorisation exclusive des CEE par l’Anah. Pas de prime CEE séparée.", [ref('anah',25)]));
+  else out.vig.push(vig('ok',"Copropriété non fragile : MaPrimeRénov’ Copropriété se cumule avec les CEE et avec un éco-PTZ « copropriétés ».", [ref('anah',[25,28,42])]));
+  if (c.passoire) out.vig.push(vig('ok',"Sortie de passoire (F ou G vers D au moins) : +10 points.", [ref('anah',25)]));
+  out.vig.push(vig('info',"Les copropriétaires gardent leurs aides individuelles (MaPrimeRénov’ par geste ou d’ampleur) pour leurs parties privatives. Maîtrise d’œuvre obligatoire au-delà de 100 000 € de travaux. Méthodes d’évaluation libres jusqu’au 31 décembre 2026, puis 3CL-DPE 2021. AMO : lecture du plancher de 3 000 € comme plancher de dépense, à confirmer auprès de l’Anah.", [ref('anah',24), ref('mpr',11)]));
   return out;
 }
 
@@ -864,12 +878,12 @@ function catBadge(R){
 function neufChip(r){ return r.neuf ? '<span class="neuf">Depuis le 1er sept.</span>' : ''; }
 function routesHtml(R){
   return '<div class="routes">'+R.routes.map(function(r){
-    return '<div class="route"><span class="st '+r.status+'">'+esc(stLabel(r))+'</span><div><div class="nm">'+esc(r.name)+neufChip(r)+'</div><div class="dt">'+esc(r.detail)+'</div></div><span class="amt">'+esc(amtText(r))+'</span></div>';
+    return '<div class="route"><span class="st '+r.status+'">'+esc(stLabel(r))+'</span><div><div class="nm">'+esc(r.name)+neufChip(r)+'</div><div class="dt">'+esc(r.detail)+srcHtml(r.src)+'</div></div><span class="amt">'+esc(amtText(r))+'</span></div>';
   }).join('')+'</div>';
 }
 function vigHtml(R){
   if (!R.vig.length) return '';
-  return '<div class="vigs">'+R.vig.map(function(v){ return '<div class="vig '+v.lvl+'"><i></i><span>'+esc(v.t)+'</span></div>'; }).join('')+'</div>';
+  return '<div class="vigs">'+R.vig.map(function(v){ return '<div class="vig '+v.lvl+'"><i></i><span>'+esc(v.t)+srcHtml(v.src)+'</span></div>'; }).join('')+'</div>';
 }
 function stepsHtml(list){ return '<ol class="steps">'+list.map(function(s){ return '<li>'+esc(s)+'</li>'; }).join('')+'</ol>'; }
 function piecesHtml(P){
@@ -1062,9 +1076,11 @@ function planHtml(R){
     + (P.pret>0 ? '<tr><td>Éco-PTZ mobilisable ('+P.duree+' ans)</td><td class="n">'+eur(P.pret)+'</td></tr><tr><td>Mensualité indicative, taux zéro</td><td class="n">'+eur(P.mens)+' / mois</td></tr><tr><td>Apport après éco-PTZ</td><td class="n">'+eur(P.reste-P.pret)+'</td></tr>' : '')
     + (R.m.ampleur ? '<tr><td>Accompagnement (hors travaux) : prise en charge Anah</td><td class="n">'+eur(P.mar)+'</td></tr>' : '')
     + '</tbody></table></div>'
-    + (P.note.length ? '<div class="vigs">'+P.note.map(function(n){ return '<div class="vig warn"><i></i><span>'+esc(n)+'</span></div>'; }).join('')+'</div>' : '')
+    + (P.note.length ? '<div class="vigs">'+P.note.map(function(n){ return '<div class="vig warn"><i></i><span>'+esc(n.t)+srcHtml(n.src)+'</span></div>'; }).join('')+'</div>' : '')
     + '</div>';
 }
+var ETAPES_SRC = {ampleur:[ref('anah',[18,20,21]), ref('mpr',7)], geste:[ref('anah',[13,14]), ref('mpr',7)], cee:[ref('anah',32)], none:[]};
+var PIECES_SRC = {ampleur:[ref('anah',[18,21])], geste:[ref('anah',[13,32])], cee:[ref('anah',32)], none:[]};
 function renderPro(){
   var i = readForm(fPro);
   if (!num(i.rfr)){ $('#pro-result').innerHTML = proEmpty(); return; }
@@ -1075,8 +1091,9 @@ function renderPro(){
   out += '<div class="card stack"><h3>Aiguillage</h3>'+routesHtml(R)+'</div>';
   out += planHtml(R);
   if (R.vig.length) out += '<div class="card stack"><h3>Points de vigilance</h3>'+vigHtml(R)+'</div>';
-  out += '<div class="card stack"><h3>Parcours</h3>'+stepsHtml(R.etapes)+'</div>';
-  if (R.pieces && Object.keys(R.pieces).length) out += '<div class="card stack"><h3>Pièces à réunir</h3>'+piecesHtml(R.pieces)+'</div>';
+  out += '<div class="card stack"><h3>Parcours'+srcHtml(ETAPES_SRC[R.etapesKey])+'</h3>'+stepsHtml(R.etapes)+'</div>';
+  if (R.pieces && Object.keys(R.pieces).length) out += '<div class="card stack"><h3>Pièces à réunir'+srcHtml(PIECES_SRC[R.etapesKey])+'</h3>'+piecesHtml(R.pieces)+'</div>';
+  out += '<p class="hint">Chaque repère « p. » ouvre la page du guide Anah ou du mode d’emploi MaPrimeRénov’ (septembre 2026) d’où vient l’information.</p>';
   $('#pro-result').innerHTML = out;
 }
 $('#pro-go').addEventListener('click', function(){ proStarted = true; renderPro(); });
@@ -1093,10 +1110,10 @@ function synthese(R){
   l.push("SYNTHÈSE DOSSIER"+(i.dossier?" — "+i.dossier:"")+" — "+PROJET[i.projet]+" — "+new Date().toLocaleDateString('fr-FR'));
   l.push(situation(i,R));
   l.push("");
-  R.routes.forEach(function(r){ var a = amtText(r); l.push("· "+r.name+" — "+stLabel(r)+(a?" — "+a:"")+" — "+r.detail); });
-  if (R.plan){ var P=R.plan; l.push(""); l.push("Plan : travaux "+eur(P.ttc)+" TTC ; MPR "+eur(P.mpr)+" ; CEE "+(R.m.ampleur?'intégrés':eur(P.cee))+" ; locales "+eur(P.locales)+" ; reste à charge "+eur(P.reste)+(P.pret>0?" ; éco-PTZ "+eur(P.pret)+" sur "+P.duree+" ans ("+eur(P.mens)+"/mois)":"")); P.note.forEach(function(n){ l.push("  ! "+n); }); }
-  if (R.vig.length){ l.push(""); R.vig.forEach(function(v){ l.push("! "+v.t); }); }
-  l.push(""); l.push("Parcours :"); R.etapes.forEach(function(s,k){ l.push((k+1)+". "+s); });
+  R.routes.forEach(function(r){ var a = amtText(r); l.push("· "+r.name+" — "+stLabel(r)+(a?" — "+a:"")+" — "+r.detail+srcTxt(r.src)); });
+  if (R.plan){ var P=R.plan; l.push(""); l.push("Plan : travaux "+eur(P.ttc)+" TTC ; MPR "+eur(P.mpr)+" ; CEE "+(R.m.ampleur?'intégrés':eur(P.cee))+" ; locales "+eur(P.locales)+" ; reste à charge "+eur(P.reste)+(P.pret>0?" ; éco-PTZ "+eur(P.pret)+" sur "+P.duree+" ans ("+eur(P.mens)+"/mois)":"")); P.note.forEach(function(n){ l.push("  ! "+n.t+srcTxt(n.src)); }); }
+  if (R.vig.length){ l.push(""); R.vig.forEach(function(v){ l.push("! "+v.t+srcTxt(v.src)); }); }
+  l.push(""); l.push("Parcours"+srcTxt(ETAPES_SRC[R.etapesKey])+" :"); R.etapes.forEach(function(s,k){ l.push((k+1)+". "+s); });
   if (R.pieces && Object.keys(R.pieces).length){ l.push(""); l.push("Pièces :"); Object.keys(R.pieces).forEach(function(k){ l.push(k+" : "+R.pieces[k].join(" ; ")); }); }
   l.push(""); l.push(BAREME.version+" — estimation indicative, sous réserve d’instruction.");
   return l.join("\n");
@@ -1109,12 +1126,12 @@ $('#pro-print').addEventListener('click', function(){
   var R = proR, i = R.input;
   var h = '<h1>Fiche client'+(i.dossier?' — '+esc(i.dossier):'')+'</h1><p>'+esc(PROJET[i.projet])+' · '+esc(new Date().toLocaleDateString('fr-FR'))+'</p>'+cabHeader();
   h += '<h2>Situation</h2><p>'+esc(situation(i,R))+'</p>';
-  h += '<h2>Aides</h2><table><tbody>'+R.routes.map(function(r){ return '<tr><td><span class="st">'+esc(stLabel(r))+'</span></td><td><strong>'+esc(r.name)+'</strong>'+neufChip(r)+'<br>'+esc(r.detail)+'</td><td style="text-align:right;white-space:nowrap">'+esc(amtText(r))+'</td></tr>'; }).join('')+'</tbody></table>';
-  if (R.plan){ var P=R.plan; h += '<h2>Plan de financement</h2><table><tbody><tr><td>Travaux TTC</td><td style="text-align:right">'+eur(P.ttc)+'</td></tr><tr><td>MaPrimeRénov’</td><td style="text-align:right">− '+eur(P.mpr)+'</td></tr><tr><td>Prime CEE</td><td style="text-align:right">'+(R.m.ampleur?'intégrée':'− '+eur(P.cee))+'</td></tr><tr><td>Aides locales</td><td style="text-align:right">− '+eur(P.locales)+'</td></tr><tr><td><strong>Reste à charge</strong></td><td style="text-align:right"><strong>'+eur(P.reste)+'</strong></td></tr>'+(P.pret>0?'<tr><td>Éco-PTZ mobilisable ('+P.duree+' ans)</td><td style="text-align:right">'+eur(P.pret)+' soit '+eur(P.mens)+' / mois</td></tr>':'')+(R.m.ampleur?'<tr><td>Accompagnement : prise en charge Anah</td><td style="text-align:right">'+eur(P.mar)+'</td></tr>':'')+'</tbody></table>'+(P.note.length?'<p>'+P.note.map(esc).join('<br>')+'</p>':''); }
-  if (R.vig.length) h += '<h2>Points de vigilance</h2><ul>'+R.vig.map(function(v){ return '<li>'+esc(v.t)+'</li>'; }).join('')+'</ul>';
-  h += '<h2>Parcours</h2><ol>'+R.etapes.map(function(s){ return '<li>'+esc(s)+'</li>'; }).join('')+'</ol>';
-  if (R.pieces && Object.keys(R.pieces).length) h += '<h2>Pièces à réunir</h2>'+piecesHtml(R.pieces);
-  h += '<p style="margin-top:14px;font-size:10px">'+esc(BAREME.version)+' — estimation indicative, sous réserve de l’instruction du dossier par l’Anah. Les primes CEE dépendent de chaque fournisseur d’énergie.</p>';
+  h += '<h2>Aides</h2><table><tbody>'+R.routes.map(function(r){ return '<tr><td><span class="st">'+esc(stLabel(r))+'</span></td><td><strong>'+esc(r.name)+'</strong>'+neufChip(r)+'<br>'+esc(r.detail)+srcHtml(r.src)+'</td><td style="text-align:right;white-space:nowrap">'+esc(amtText(r))+'</td></tr>'; }).join('')+'</tbody></table>';
+  if (R.plan){ var P=R.plan; h += '<h2>Plan de financement</h2><table><tbody><tr><td>Travaux TTC</td><td style="text-align:right">'+eur(P.ttc)+'</td></tr><tr><td>MaPrimeRénov’</td><td style="text-align:right">− '+eur(P.mpr)+'</td></tr><tr><td>Prime CEE</td><td style="text-align:right">'+(R.m.ampleur?'intégrée':'− '+eur(P.cee))+'</td></tr><tr><td>Aides locales</td><td style="text-align:right">− '+eur(P.locales)+'</td></tr><tr><td><strong>Reste à charge</strong></td><td style="text-align:right"><strong>'+eur(P.reste)+'</strong></td></tr>'+(P.pret>0?'<tr><td>Éco-PTZ mobilisable ('+P.duree+' ans)</td><td style="text-align:right">'+eur(P.pret)+' soit '+eur(P.mens)+' / mois</td></tr>':'')+(R.m.ampleur?'<tr><td>Accompagnement : prise en charge Anah</td><td style="text-align:right">'+eur(P.mar)+'</td></tr>':'')+'</tbody></table>'+(P.note.length?'<p>'+P.note.map(function(n){ return esc(n.t)+srcHtml(n.src); }).join('<br>')+'</p>':''); }
+  if (R.vig.length) h += '<h2>Points de vigilance</h2><ul>'+R.vig.map(function(v){ return '<li>'+esc(v.t)+srcHtml(v.src)+'</li>'; }).join('')+'</ul>';
+  h += '<h2>Parcours'+srcHtml(ETAPES_SRC[R.etapesKey])+'</h2><ol>'+R.etapes.map(function(s){ return '<li>'+esc(s)+'</li>'; }).join('')+'</ol>';
+  if (R.pieces && Object.keys(R.pieces).length) h += '<h2>Pièces à réunir'+srcHtml(PIECES_SRC[R.etapesKey])+'</h2>'+piecesHtml(R.pieces);
+  h += '<p style="margin-top:14px;font-size:10px">'+esc(BAREME.version)+' — estimation indicative, sous réserve de l’instruction du dossier par l’Anah. Les primes CEE dépendent de chaque fournisseur d’énergie. Les repères « p. » renvoient aux pages du guide Anah et du mode d’emploi MaPrimeRénov’ de septembre 2026.</p>';
   printHtml(h);
 });
 
@@ -1128,7 +1145,7 @@ function renderCopro(){
   var o = copro(c), out = '';
   if (!o.ok){ out = '<div class="verdict bad"><h2>Hors MaPrimeRénov’ Copropriété</h2></div><div class="card">'+vigHtml({vig:o.vig})+'</div>'; }
   else {
-    out = '<div class="verdict"><span class="eyebrow">MaPrimeRénov’ Copropriété</span><div class="big">'+eur(o.aide)+'</div><h2>'+pct(o.taux)+' des travaux, plafond '+eur(o.plafond)+'</h2><p style="margin-top:8px">Base retenue '+eur(o.base)+' (25 000 € de travaux par logement). Aide versée au syndicat, répartie aux tantièmes.</p></div>';
+    out = '<div class="verdict"><span class="eyebrow">MaPrimeRénov’ Copropriété'+srcHtml([ref('anah',[24,25])])+'</span><div class="big">'+eur(o.aide)+'</div><h2>'+pct(o.taux)+' des travaux, plafond '+eur(o.plafond)+'</h2><p style="margin-top:8px">Base retenue '+eur(o.base)+' (25 000 € de travaux par logement). Aide versée au syndicat, répartie aux tantièmes.</p></div>';
     out += '<div class="kpis"><div class="kpi ok"><div class="v">'+eur(o.aide)+'</div><div class="k">Aide collective</div></div><div class="kpi"><div class="v">'+eur(o.primes)+'</div><div class="k">Primes occupants (3 000 € TMO, 1 500 € MO)</div></div><div class="kpi"><div class="v">'+eur(o.amo)+'</div><div class="k">Aide AMO (50 % d’une dépense retenue de '+eur(o.amoDepense)+')</div></div><div class="kpi ok"><div class="v">'+eur(o.aide+o.primes+o.amo)+'</div><div class="k">Total Anah</div></div></div>';
     out += '<div class="card stack"><h3>Points de vigilance</h3>'+vigHtml({vig:o.vig})+'</div>';
   }
@@ -1154,17 +1171,17 @@ $('#cab-clear').addEventListener('click', function(){ try { localStorage.removeI
 /* ---- Réforme 2026 ---- */
 function renderReforme(){
   var T = [
-    ["1er janv. 2025","past","Chaudières gaz : plus aucun financement MaPrimeRénov’ ; en copropriété, période transitoire (intégrables au calcul du gain jusqu’au 31 décembre 2026, coût non financé). Logements classés G interdits à la location."],
-    ["31 déc. 2025","past","Fin du rehaussement temporaire du déficit foncier (retour à 10 700 € par an)."],
-    ["1er janv. 2026","past","Plafonds de ressources 2026. MaPrimeAdapt’ : fin de l’accompagnement « socle », seuls restent le complet (600 € TTC) et le complet avec ergothérapeute (800 € TTC)."],
-    ["17 août 2026","past","Compte unique sur france-renov.gouv.fr pour toute aide Anah, avec vérification d’identité (France Connect+ ou code par courrier). Le demandeur crée lui-même son compte ; le mandataire ne peut pas le faire. Mandataires financiers soumis à de nouveaux engagements et garanties."],
-    ["1er sept. 2026","now","<strong>La réforme.</strong> Rénovation par geste recentrée sur les chauffages décarbonés : PAC air/eau, PAC géothermique, réseau de chaleur (plus audit et dépose de cuve). Fin des forfaits isolation, ventilation, biomasse, chauffe-eau thermodynamique, solaire. Rénovation d’ampleur en maison individuelle : chauffage et eau chaude décarbonés obligatoires, gaz exclu, fioul et charbon toujours exclus. CEE : coup de pouce « rénovation d’ampleur » ouvert aux résidences secondaires et aux logements de moins de 15 ans classés E, F ou G si décarbonés ; bonifications nouvelles pour chauffe-eau thermodynamique et solaire thermique sous décarbonation. TVA à 5,5 % étendue aux PAC air/air."],
-    ["1er oct. 2026","next","Offre « PAC clé en main » annoncée : installation, entretien, financement et fourniture d’énergie."],
-    ["31 déc. 2026","next","Copropriétés : fin de la transition chaudière gaz et des méthodes d’évaluation libres (3CL-DPE 2021 obligatoire ensuite). Fin des dossiers copro intégrant une chaudière gaz au calcul du gain."],
-    ["31 déc. 2027","next","Fin de Loc’Avantages (réduction d’impôt des bailleurs à loyer plafonné)."],
-    ["1er janv. 2028","next","Logements classés F interdits à la location."],
-    ["31 déc. 2029","next","Fin de l’expérimentation « petites copropriétés » (20 lots ou moins, gain ≥ 15 %)."],
-    ["1er janv. 2034","next","Logements classés E interdits à la location."]
+    ["1er janv. 2025","past","Chaudières gaz : plus aucun financement MaPrimeRénov’ ; en copropriété, période transitoire (intégrables au calcul du gain jusqu’au 31 décembre 2026, coût non financé). Logements classés G interdits à la location.", [ref('anah',24), ref('mpr',8)]],
+    ["31 déc. 2025","past","Fin du rehaussement temporaire du déficit foncier (retour à 10 700 € par an).", [ref('anah',39)]],
+    ["1er janv. 2026","past","Plafonds de ressources 2026. MaPrimeAdapt’ : fin de l’accompagnement « socle », seuls restent le complet (600 € TTC) et le complet avec ergothérapeute (800 € TTC).", [ref('anah',[8,58])]],
+    ["17 août 2026","past","Compte unique sur france-renov.gouv.fr pour toute aide Anah, avec vérification d’identité (France Connect+ ou code par courrier). Le demandeur crée lui-même son compte ; le mandataire ne peut pas le faire. Mandataires financiers soumis à de nouveaux engagements et garanties.", [ref('anah',[6,10,14])]],
+    ["1er sept. 2026","now","<strong>La réforme.</strong> Rénovation par geste recentrée sur les chauffages décarbonés : PAC air/eau, PAC géothermique, réseau de chaleur (plus audit et dépose de cuve). Fin des forfaits isolation, ventilation, biomasse, chauffe-eau thermodynamique, solaire. Rénovation d’ampleur en maison individuelle : chauffage et eau chaude décarbonés obligatoires, gaz exclu, fioul et charbon toujours exclus. CEE : coup de pouce « rénovation d’ampleur » ouvert aux résidences secondaires et aux logements de moins de 15 ans classés E, F ou G si décarbonés ; bonifications nouvelles pour chauffe-eau thermodynamique et solaire thermique sous décarbonation. TVA à 5,5 % étendue aux PAC air/air.", [ref('anah',[7,14,17,32]), ref('mpr',5)]],
+    ["1er oct. 2026","next","Offre « PAC clé en main » annoncée : installation, entretien, financement et fourniture d’énergie.", [ref('anah',7), ref('mpr',17)]],
+    ["31 déc. 2026","next","Copropriétés : fin de la transition chaudière gaz et des méthodes d’évaluation libres (3CL-DPE 2021 obligatoire ensuite). Fin des dossiers copro intégrant une chaudière gaz au calcul du gain.", [ref('anah',24)]],
+    ["31 déc. 2027","next","Fin de Loc’Avantages (réduction d’impôt des bailleurs à loyer plafonné).", [ref('anah',29)]],
+    ["1er janv. 2028","next","Logements classés F interdits à la location.", [ref('mpr',8)]],
+    ["31 déc. 2029","next","Fin de l’expérimentation « petites copropriétés » (20 lots ou moins, gain ≥ 15 %).", [ref('anah',26)]],
+    ["1er janv. 2034","next","Logements classés E interdits à la location.", [ref('mpr',8)]]
   ];
   var AV = [
     ["Isolation seule (murs, combles, planchers, fenêtres)","Forfait MaPrimeRénov’ par geste + CEE","CEE seuls, TVA 5,5 %, éco-PTZ ; ou dans une rénovation d’ampleur"],
@@ -1179,8 +1196,8 @@ function renderReforme(){
     ["Chaudière gaz","Aucune aide Anah","Aucune aide Anah, TVA 20 %, hors éco-PTZ"]
   ];
   var h = '<div class="card stack wide"><div class="row" style="justify-content:space-between"><h2>Ce qui a changé, ce qui vient</h2><button type="button" class="btn" id="reforme-print">Imprimer le mémo</button></div><p class="muted small">Dates et règles tirées des encadrés « évolutions » du guide Anah de septembre 2026 et du mode d’emploi MaPrimeRénov’. Les anciens montants ne figurent pas dans ces guides et ne sont donc pas reproduits ici.</p></div>';
-  h += '<div class="card" id="reforme-frise"><h3>Frise</h3><ul class="timeline" style="margin-top:8px">'+T.map(function(t){ return '<li><span class="d '+t[1]+'">'+esc(t[0])+'</span><span>'+t[2]+'</span></li>'; }).join('')+'</ul></div>';
-  h += '<div class="card" id="reforme-avap"><h3>Avant → depuis le 1<sup>er</sup> septembre 2026</h3><div class="tblwrap" style="margin-top:8px"><table><thead><tr><th>Travaux</th><th>Jusqu’au 31 août 2026</th><th>Depuis le 1er septembre 2026</th></tr></thead><tbody>'+AV.map(function(r){ return '<tr><td><strong>'+esc(r[0])+'</strong></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
+  h += '<div class="card" id="reforme-frise"><h3>Frise</h3><ul class="timeline" style="margin-top:8px">'+T.map(function(t){ return '<li><span class="d '+t[1]+'">'+esc(t[0])+'</span><span>'+t[2]+srcHtml(t[3])+'</span></li>'; }).join('')+'</ul></div>';
+  h += '<div class="card" id="reforme-avap"><h3>Avant → depuis le 1<sup>er</sup> septembre 2026'+srcHtml([ref('anah',[7,31,32]), ref('mpr',5)])+'</h3><div class="tblwrap" style="margin-top:8px"><table><thead><tr><th>Travaux</th><th>Jusqu’au 31 août 2026</th><th>Depuis le 1er septembre 2026</th></tr></thead><tbody>'+AV.map(function(r){ return '<tr><td><strong>'+esc(r[0])+'</strong></td><td>'+esc(r[1])+'</td><td>'+esc(r[2])+'</td></tr>'; }).join('')+'</tbody></table></div></div>';
   h += '<div class="card wide"><h3>Ce que ça change pour un réseau de partenaires RGE</h3><div class="vigs" style="margin-top:8px">'
     + '<div class="vig bad"><i></i><span>L’isolation, la ventilation, le bois, le chauffe-eau thermodynamique et le solaire ne se vendent plus « avec MaPrimeRénov’ » en geste isolé : l’argument devient la prime CEE, la TVA à 5,5 % et l’éco-PTZ, ou le passage en rénovation d’ampleur (E, F, G).</span></div>'
     + '<div class="vig warn"><i></i><span>La chaudière gaz n’a plus sa place dans une offre de rénovation d’ampleur en maison, et n’ouvre aucune aide en geste : la PAC prend le relais, avec un coup de pouce CEE au remplacement d’une chaudière fossile.</span></div>'
@@ -1195,7 +1212,7 @@ function renderReforme(){
 
 /* ---- Barème ---- */
 function tblRess(T, S, titre){
-  var h = '<div class="card"><h3>'+titre+'</h3><p class="hint" style="margin:4px 0 10px">Plafonds au 1er janvier 2026. Le revenu fiscal de référence retenu est la somme des revenus fiscaux de référence des avis du ménage.</p><div class="tblwrap"><table><thead><tr><th>Personnes</th><th class="n">Très modestes</th><th class="n">Modestes</th><th class="n">Intermédiaires</th><th class="n">Supérieurs</th></tr></thead><tbody>';
+  var h = '<div class="card"><h3>'+titre+srcHtml([ref('anah',8), ref('mpr',13)])+'</h3><p class="hint" style="margin:4px 0 10px">Plafonds au 1er janvier 2026. Le revenu fiscal de référence retenu est la somme des revenus fiscaux de référence des avis du ménage.</p><div class="tblwrap"><table><thead><tr><th>Personnes</th><th class="n">Très modestes</th><th class="n">Modestes</th><th class="n">Intermédiaires</th><th class="n">Supérieurs</th></tr></thead><tbody>';
   T.forEach(function(r,k){ h += '<tr><td>'+(k+1)+'</td><td class="n">≤ '+r[0].toLocaleString('fr-FR')+'</td><td class="n">≤ '+r[1].toLocaleString('fr-FR')+'</td><td class="n">≤ '+r[2].toLocaleString('fr-FR')+'</td><td class="n">&gt; '+r[2].toLocaleString('fr-FR')+'</td></tr>'; });
   h += '<tr><td>par pers. suppl.</td><td class="n">+ '+S[0].toLocaleString('fr-FR')+'</td><td class="n">+ '+S[1].toLocaleString('fr-FR')+'</td><td class="n">+ '+S[2].toLocaleString('fr-FR')+'</td><td class="n"></td></tr></tbody></table></div></div>';
   return h;
@@ -1206,24 +1223,24 @@ function renderBareme(){
   h += '<div id="bareme-body" style="display:contents">';
   h += tblRess(BAREME.plafonds.idf, BAREME.plafonds.suppIdf, "Plafonds de ressources — Île-de-France");
   h += tblRess(BAREME.plafonds.hors, BAREME.plafonds.suppHors, "Plafonds de ressources — autres régions");
-  h += '<div class="card"><h3>MaPrimeRénov’ par geste</h3><div class="tblwrap"><table><thead><tr><th>Équipement</th><th class="n">Très mod.</th><th class="n">Modestes</th><th class="n">Interm.</th><th class="n">Plafond dépense</th></tr></thead><tbody>'
+  h += '<div class="card"><h3>MaPrimeRénov’ par geste'+srcHtml([ref('anah',[12,13,14,15,16])])+'</h3><div class="tblwrap"><table><thead><tr><th>Équipement</th><th class="n">Très mod.</th><th class="n">Modestes</th><th class="n">Interm.</th><th class="n">Plafond dépense</th></tr></thead><tbody>'
     + ['pac_geo','pac_air_eau','reseau','cuve','audit'].map(function(k){ var g=BAREME.geste[k]; return '<tr><td>'+esc(g.label)+'</td><td class="n">'+eur(g.forfait[0])+'</td><td class="n">'+eur(g.forfait[1])+'</td><td class="n">'+eur(g.forfait[2])+'</td><td class="n">'+eur(g.plafond)+'</td></tr>'; }).join('')
     + '</tbody></table></div><p class="note" style="margin-top:10px">Revenus supérieurs : non éligibles. Écrêtement MaPrimeRénov’ + CEE : 90 % / 75 % / 60 % de la dépense éligible ; 100 % avec les aides locales. Avance jusqu’à 50 % (très modestes). « Limite de 20 000 € par logement sur 5 ans » (formulation Anah). Logement ≥ 15 ans (sauf remplacement d’une chaudière fioul avec dépose de cuve), résidence principale, RGE avec visite préalable datée sur le devis. Panne entre le 1er octobre et le 30 avril : dépôt possible 2 mois après l’installation.</p></div>';
-  h += '<div class="card"><h3>MaPrimeRénov’ rénovation d’ampleur</h3><div class="tblwrap"><table><thead><tr><th></th><th class="n">Très mod.</th><th class="n">Modestes</th><th class="n">Interm.</th><th class="n">Supérieurs</th></tr></thead><tbody>'
+  h += '<div class="card"><h3>MaPrimeRénov’ rénovation d’ampleur'+srcHtml([ref('anah',[17,18,19,21,22,23])])+'</h3><div class="tblwrap"><table><thead><tr><th></th><th class="n">Très mod.</th><th class="n">Modestes</th><th class="n">Interm.</th><th class="n">Supérieurs</th></tr></thead><tbody>'
     + '<tr><td>Taux (sur HT)</td><td class="n">80 %</td><td class="n">60 %</td><td class="n">45 %</td><td class="n">10 %</td></tr>'
     + '<tr><td>Écrêtement (sur TTC, dans la limite du plafond)</td><td class="n">100 %</td><td class="n">90 %</td><td class="n">80 %</td><td class="n">50 %</td></tr>'
     + '<tr><td>Accompagnateur Rénov’ (sur 2 000 € TTC)</td><td class="n">100 %</td><td class="n">80 %</td><td class="n">40 %</td><td class="n">20 %</td></tr>'
     + '</tbody></table></div><p class="note" style="margin-top:10px">Plafond de travaux : 30 000 € HT (gain de 2 classes), 40 000 € HT (3 classes ou plus), travaux induits et confort d’été compris. Conditions : logement E, F ou G, ≥ 15 ans, résidence principale ; ≥ 2 gestes d’isolation (25 % des surfaces par poste choisi) ; en maison, chauffage et eau chaude sans gaz, fioul ni charbon ; RDV France Rénov’ obligatoire ; CEE intégrés ; avance ≤ 30 % (occupants modestes et très modestes) ; engagement 3 ans (occupant) / 6 ans (bailleur). Deux étapes possibles sur 5 ans : F et G doivent atteindre C, E doit atteindre B ; plafond de seconde étape = plafond du gain total moins la dépense de première étape.</p></div>';
-  h += '<div class="card"><h3>Éco-prêt à taux zéro</h3><div class="tblwrap"><table><thead><tr><th>Cas</th><th class="n">Plafond</th><th class="n">Durée</th></tr></thead><tbody>'
+  h += '<div class="card"><h3>Éco-prêt à taux zéro'+srcHtml([ref('anah',[40,41,42,43,44])])+'</h3><div class="tblwrap"><table><thead><tr><th>Cas</th><th class="n">Plafond</th><th class="n">Durée</th></tr></thead><tbody>'
     + '<tr><td>Action seule (7 000 € pour les seules parois vitrées)</td><td class="n">15 000 €</td><td class="n">15 ans</td></tr><tr><td>Bouquet de 2 actions</td><td class="n">25 000 €</td><td class="n">15 ans</td></tr><tr><td>Bouquet de 3 actions ou plus</td><td class="n">30 000 €</td><td class="n">15 ans</td></tr><tr><td>Assainissement non collectif</td><td class="n">10 000 €</td><td class="n">15 ans</td></tr><tr><td>Performance globale / éco-PTZ MaPrimeRénov’</td><td class="n">50 000 €</td><td class="n">20 ans</td></tr>'
     + '</tbody></table></div><p class="note" style="margin-top:10px">Sans condition de ressources ; logement de plus de 2 ans, résidence principale ; un seul par logement (complémentaire dans les 5 ans, cumul 30 000 / 50 000 €) ; 3 ans pour réaliser les travaux ; 6 mois pour débloquer l’éco-PTZ MaPrimeRénov’ après notification ; pas de chaudière gaz ; couplage possible avec le prêt d’acquisition. Prêt avance rénovation (PAR+) : hypothécaire ≤ 50 000 €, 10 ans à taux zéro, ménages modestes et très modestes.</p></div>';
-  h += '<div class="card"><h3>MaPrimeRénov’ Copropriété</h3><div class="tblwrap"><table><tbody><tr><td>Gain ≥ 35 %</td><td class="n">30 % des travaux</td></tr><tr><td>Gain ≥ 50 %</td><td class="n">45 % des travaux</td></tr><tr><td>Sortie de passoire (F/G → D)</td><td class="n">+ 10 points</td></tr><tr><td>Copropriété fragile / en difficulté</td><td class="n">+ 20 points</td></tr><tr><td>Plafond de travaux</td><td class="n">25 000 € / logement</td></tr><tr><td>Primes occupants très modestes / modestes</td><td class="n">3 000 € / 1 500 €</td></tr><tr><td>AMO (obligatoire)</td><td class="n">50 %, 600–1 000 € HT / logt, plancher 3 000 €</td></tr></tbody></table></div><p class="note" style="margin-top:10px">≥ 75 % de lots en résidence principale (65 % si ≤ 20 lots), immatriculation à jour, ≥ 15 ans, évaluation énergétique. Chaudière gaz : intégrable au calcul du gain jusqu’au 31 décembre 2026 mais non financée. Petites copropriétés (≤ 20 lots, suivies par la collectivité) : gain ≥ 15 %, jusqu’en 2029. Accessibilité des parties communes : 50 % de 20 000 € par hall.</p></div>';
-  h += '<div class="card"><h3>CEE : les règles qui font perdre la prime</h3><div class="vigs">'
+  h += '<div class="card"><h3>MaPrimeRénov’ Copropriété'+srcHtml([ref('anah',[24,25,26,60]), ref('mpr',[10,11])])+'</h3><div class="tblwrap"><table><tbody><tr><td>Gain ≥ 35 %</td><td class="n">30 % des travaux</td></tr><tr><td>Gain ≥ 50 %</td><td class="n">45 % des travaux</td></tr><tr><td>Sortie de passoire (F/G → D)</td><td class="n">+ 10 points</td></tr><tr><td>Copropriété fragile / en difficulté</td><td class="n">+ 20 points</td></tr><tr><td>Plafond de travaux</td><td class="n">25 000 € / logement</td></tr><tr><td>Primes occupants très modestes / modestes</td><td class="n">3 000 € / 1 500 €</td></tr><tr><td>AMO (obligatoire)</td><td class="n">50 %, 600–1 000 € HT / logt, plancher 3 000 €</td></tr></tbody></table></div><p class="note" style="margin-top:10px">≥ 75 % de lots en résidence principale (65 % si ≤ 20 lots), immatriculation à jour, ≥ 15 ans, évaluation énergétique. Chaudière gaz : intégrable au calcul du gain jusqu’au 31 décembre 2026 mais non financée. Petites copropriétés (≤ 20 lots, suivies par la collectivité) : gain ≥ 15 %, jusqu’en 2029. Accessibilité des parties communes : 50 % de 20 000 € par hall.</p></div>';
+  h += '<div class="card"><h3>CEE : les règles qui font perdre la prime'+srcHtml([ref('anah',[31,32,46])])+'</h3><div class="vigs">'
     + '<div class="vig bad"><i></i><span>L’engagement du fournisseur (ou délégataire) doit être écrit et antérieur à la signature du devis. Tolérance : 14 jours après signature. Au-delà, le bénéfice est perdu.</span></div>'
     + '<div class="vig warn"><i></i><span>Logement de plus de 2 ans, résidence principale ou secondaire, professionnel RGE quand la qualification existe, critères des fiches (PAC : COP &gt; 2,4 ou 2,5 ; PAC air/air : SCOP ≥ 3,9 ; coup de pouce : PAC agréée).</span></div>'
     + '<div class="vig info"><i></i><span>Coup de pouce chauffage : remplacement d’une chaudière charbon, fioul ou gaz par une chaudière biomasse, une PAC air/eau ou eau/eau, un système solaire combiné ou un réseau de chaleur ; charbon → appareil bois Flamme verte ; bonifié pour les ménages modestes et très modestes. Cumul avec MaPrimeRénov’ par geste (écrêtement), jamais avec la rénovation d’ampleur MaPrimeRénov’ (intégrés). Copropriétés fragiles : CEE valorisés par l’Anah uniquement.</span></div>'
     + '</div></div>';
-  h += '<div class="card"><h3>Critères techniques (geste et ampleur)</h3><div class="tblwrap"><table><thead><tr><th>Poste</th><th>Exigence</th></tr></thead><tbody>'
+  h += '<div class="card"><h3>Critères techniques (geste et ampleur)'+srcHtml([ref('anah',[46,48,49,50,51,52,53,54])])+'</h3><div class="tblwrap"><table><thead><tr><th>Poste</th><th>Exigence</th></tr></thead><tbody>'
     + '<tr><td>PAC air/eau, eau/eau, sol</td><td>Efficacité saisonnière ≥ 126 % (basse T°) ou ≥ 111 % (moyenne/haute T°), régulation classe IV</td></tr>'
     + '<tr><td>Fenêtres / portes-fenêtres</td><td>Uw ≤ 1,3 et Sw ≥ 0,3, ou Uw ≤ 1,7 et Sw ≥ 0,36 ; fenêtre de toiture Uw ≤ 1,5 et Sw ≥ 0,36 ; doubles fenêtres Uw ≤ 1,8 et Sw ≥ 0,32</td></tr>'
     + '<tr><td>Combles perdus / rampants / toiture-terrasse</td><td>R ≥ 7 / R ≥ 6 / R ≥ 6,5 (ampleur ; 4,5 en geste) m².K/W</td></tr>'
@@ -1235,7 +1252,7 @@ function renderBareme(){
     + '<tr><td>Solaire</td><td>Capteurs CSTBat ou Solar Keymark ; CESI ≥ 2 m², SSC ≥ 8 m²</td></tr>'
     + '<tr><td>Brasseurs d’air fixes (confort d’été)</td><td>Ø &gt; 1,32 m, 3 vitesses, &lt; 45 dB, &gt; 250 m³/Wh</td></tr>'
     + '</tbody></table></div></div>';
-  h += '<div class="card"><h3>Bailleurs et fiscalité</h3><div class="tblwrap"><table><tbody>'
+  h += '<div class="card"><h3>Bailleurs et fiscalité'+srcHtml([ref('anah',[29,30,33,36,37,38]), ref('mpr',8)])+'</h3><div class="tblwrap"><table><tbody>'
     + '<tr><td>Interdiction de location</td><td>G depuis 2025 · F en 2028 · E en 2034</td></tr>'
     + '<tr><td>Loc’Avantages (jusqu’au 31/12/2027)</td><td>Réduction d’impôt 15–65 % ; non meublé, 6 ans, locataire modeste hors famille, loyer plafonné ; travaux 25 % HT jusqu’à 15 000 € (énergétique, gain ≥ 35 %), 35 % jusqu’à 21 000 / 28 000 € (habitat dégradé) ; DPE D après travaux ; MAR requis (prime 80 %, plafond 2 000 €, ou 100 % / 4 000 € avec habitat indigne)</td></tr>'
     + '<tr><td>Denormandie</td><td>12 / 18 / 21 % pour 6 / 9 / 12 ans ; travaux ≥ 25 % de l’opération, améliorant la performance de 30 % ou combinant 2 types de travaux sur 5 ; plafond 300 000 € ; DPE A à E après travaux ; villes « Action cœur de ville » et ORT</td></tr>'
@@ -1244,7 +1261,7 @@ function renderBareme(){
     + '<tr><td>Prime sortie de vacance</td><td>5 000 € en zone rurale, logement vacant &gt; 2 ans, avec travaux Anah</td></tr>'
     + '<tr><td>TVA</td><td>5,5 % rénovation énergétique et travaux liés ; 10 % autres améliorations ; 20 % chaudière fossile, logements &lt; 2 ans, surélévation ou immeuble rendu neuf</td></tr>'
     + '</tbody></table></div></div>';
-  h += '<div class="card"><h3>MaPrimeAdapt’ et habitat indigne</h3><div class="tblwrap"><table><tbody>'
+  h += '<div class="card"><h3>MaPrimeAdapt’ et habitat indigne'+srcHtml([ref('anah',[55,56,58,59,62,63,64])])+'</h3><div class="tblwrap"><table><tbody>'
     + '<tr><td>MaPrimeAdapt’</td><td>70 % (très modestes) / 50 % (modestes) de 22 000 € HT ; 70 ans et plus, 60–69 ans avec GIR, handicap ≥ 50 % ou PCH ; AMO 600 / 800 € TTC pris en charge ; avance ≤ 30 % (hors mandataire financier) ; seconde demande dans 5 ans ; locataires éligibles</td></tr>'
     + '<tr><td>Adaptation, bailleurs</td><td>35 % de 750 € / m², 80 m² max (21 000 €), convention Anah</td></tr>'
     + '<tr><td>Ma Prime Logement Décent (occupants)</td><td>80 % / 60 % de 70 000 € HT, écrêtement 100 % / 90 % TTC, sortie en E minimum, +10 % sortie de passoire ; si E non atteinte : 50 % de 50 000 € HT ; logement ≥ 15 ans, grille de dégradation ≥ 0,35 ou d’insalubrité ≥ 0,4, audit obligatoire, avance ≤ 30 %</td></tr>'
