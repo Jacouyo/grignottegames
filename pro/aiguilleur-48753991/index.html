@@ -207,6 +207,7 @@ h3 .src{font-weight:400}
 .ba .w{font-weight:600}
 .ba .b{font-size:.88rem;color:var(--muted)}
 .ba .a{font-size:.9rem}
+.ba .a .src{margin-left:0}
 .eff{font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px;white-space:nowrap;margin-top:2px}
 .eff.perdu{background:var(--bad-soft);color:var(--bad)}.eff.exclu{background:var(--bad);color:#fff}.eff.gagne{background:var(--ok-soft);color:var(--ok)}.eff.egal{background:var(--surface-2);color:var(--muted)}.eff.mieux{background:var(--info-soft);color:var(--info)}
 @media (max-width:700px){.ba .row{grid-template-columns:1fr}.ba .row.h{display:none}.ba .b::before{content:"Avant : ";font-weight:600}.ba .a::before{content:"Depuis : ";font-weight:600}}
@@ -1216,16 +1217,16 @@ function renderReforme(){
     ["1er janv. 2034","next","E interdits à la location","Toute la classe E sort du marché locatif.", [ref('mpr',8)]]
   ];
   var AV = [
-    ["Isolation seule (murs, combles, planchers, fenêtres)","Forfait MaPrimeRénov’ + CEE","CEE seuls, TVA 5,5 %, éco-PTZ. Ou l’intégrer à une rénovation d’ampleur.","perdu","Perdu"],
-    ["Ventilation","Forfait MaPrimeRénov’","CEE seuls, ou rénovation d’ampleur.","perdu","Perdu"],
-    ["Chaudière ou poêle biomasse","Forfait MaPrimeRénov’ + CEE","CEE seuls. Coup de pouce si une chaudière biomasse remplace une chaudière fossile, ou un appareil Flamme verte un chauffage charbon.","perdu","Perdu"],
-    ["Chauffe-eau thermodynamique","Forfait MaPrimeRénov’","CEE bonifiés si chauffage et/ou eau chaude entièrement décarbonés.","perdu","Perdu"],
-    ["Solaire thermique (CESI, SSC)","Forfait MaPrimeRénov’","CEE bonifiés si décarbonation. Coup de pouce pour un système solaire combiné remplaçant une chaudière fossile.","perdu","Perdu"],
-    ["PAC air/eau, géothermie, réseau de chaleur","MaPrimeRénov’ + CEE","MaPrimeRénov’ (très modestes à intermédiaires) + CEE, coup de pouce en remplacement d’une chaudière fossile.","egal","Inchangé"],
-    ["PAC air/air","CEE (SCOP ≥ 3,9), TVA des travaux d’amélioration","CEE (SCOP ≥ 3,9) et TVA à 5,5 %.","mieux","Mieux"],
-    ["Rénovation d’ampleur en maison avec gaz conservé","Admise","Refusée. Chauffage et eau chaude doivent être décarbonés.","exclu","Exclu"],
-    ["Rénovation d’ampleur, résidence secondaire ou logement de moins de 15 ans","Aucune aide","Coup de pouce CEE si classé E, F ou G et projet décarboné.","gagne","Gagné"],
-    ["Chaudière gaz","Aucune aide Anah","Aucune aide Anah, TVA 20 %, hors éco-PTZ.","egal","Inchangé"]
+    ["Isolation seule (murs, combles, planchers, fenêtres)","Forfait MaPrimeRénov’ + CEE","CEE seuls, TVA 5,5 %, éco-PTZ. Ou l’intégrer à une rénovation d’ampleur.","perdu","Perdu",[ref('anah',[7,14,31,33,41,48])]],
+    ["Ventilation","Forfait MaPrimeRénov’","CEE seuls, ou rénovation d’ampleur.","perdu","Perdu",[ref('anah',[7,14,31,50])]],
+    ["Chaudière ou poêle biomasse","Forfait MaPrimeRénov’ + CEE","CEE seuls. Coup de pouce si une chaudière biomasse remplace une chaudière fossile, ou un appareil Flamme verte un chauffage charbon.","perdu","Perdu",[ref('anah',[7,14,32,51,52])]],
+    ["Chauffe-eau thermodynamique","Forfait MaPrimeRénov’","CEE bonifiés si chauffage et/ou eau chaude entièrement décarbonés.","perdu","Perdu",[ref('anah',[7,14,32,53])]],
+    ["Solaire thermique (CESI, SSC)","Forfait MaPrimeRénov’","CEE bonifiés si décarbonation. Coup de pouce pour un système solaire combiné remplaçant une chaudière fossile.","perdu","Perdu",[ref('anah',[7,14,32,52,53])]],
+    ["PAC air/eau, géothermie, réseau de chaleur","MaPrimeRénov’ + CEE","MaPrimeRénov’ (très modestes à intermédiaires) + CEE, coup de pouce en remplacement d’une chaudière fossile.","egal","Inchangé",[ref('anah',[14,15,32,46]), ref('mpr',17)]],
+    ["PAC air/air","CEE (SCOP ≥ 3,9), TVA des travaux d’amélioration","CEE (SCOP ≥ 3,9) et TVA à 5,5 %.","mieux","Mieux",[ref('anah',[7,33,46])]],
+    ["Rénovation d’ampleur en maison avec gaz conservé","Admise","Refusée. Chauffage et eau chaude doivent être décarbonés.","exclu","Exclu",[ref('anah',[7,17,19]), ref('mpr',19)]],
+    ["Rénovation d’ampleur, résidence secondaire ou logement de moins de 15 ans","Aucune aide","Coup de pouce CEE si classé E, F ou G et projet décarboné.","gagne","Gagné",[ref('anah',[7,18,32])]],
+    ["Chaudière gaz","Aucune aide Anah","Aucune aide Anah, TVA 20 %, hors éco-PTZ.","egal","Inchangé",[ref('anah',[14,33,41])]]
   ];
   var h = '<div class="card stack wide"><div class="row" style="justify-content:space-between"><h2>Réforme du 1<sup>er</sup> septembre 2026</h2><button type="button" class="btn" id="reforme-print">Imprimer le mémo</button></div><p class="muted small">Ce qui a changé, ce qui vient, et ce que ça change pour un réseau de partenaires RGE. Dates et règles tirées des encadrés « évolutions » des guides Anah de septembre 2026 ; les anciens montants n’y figurent pas et ne sont donc pas reproduits.</p></div>';
   h += '<div class="wide" id="reforme-tuiles"><div class="hero4">'
@@ -1236,7 +1237,7 @@ function renderReforme(){
     + '</div></div>';
   h += '<div class="two wide">';
   h += '<div class="card" id="reforme-frise"><h3>La frise</h3><ul class="tl">'+T.map(function(t){ return '<li class="'+t[1]+'"><div class="d">'+esc(t[0])+'</div><div class="t">'+esc(t[2])+'</div><div class="x">'+esc(t[3])+srcHtml(t[4])+'</div></li>'; }).join('')+'</ul></div>';
-  h += '<div class="card" id="reforme-avap"><h3>Avant, après'+srcHtml([ref('anah',[7,31,32]), ref('mpr',5)])+'</h3><div class="ba"><div class="row h"><span>Travaux</span><span>Jusqu’au 31 août</span><span>Depuis le 1er septembre</span><span></span></div>'+AV.map(function(r){ return '<div class="row"><span class="w">'+esc(r[0])+'</span><span class="b">'+esc(r[1])+'</span><span class="a">'+esc(r[2])+'</span><span class="eff '+r[3]+'">'+esc(r[4])+'</span></div>'; }).join('')+'</div></div>';
+  h += '<div class="card" id="reforme-avap"><h3>Avant, après</h3><div class="ba"><div class="row h"><span>Travaux</span><span>Jusqu’au 31 août</span><span>Depuis le 1er septembre</span><span></span></div>'+AV.map(function(r){ return '<div class="row"><span class="w">'+esc(r[0])+'</span><span class="b">'+esc(r[1])+'</span><span class="a">'+esc(r[2])+'<br>'+srcHtml(r[5])+'</span><span class="eff '+r[3]+'">'+esc(r[4])+'</span></div>'; }).join('')+'</div></div>';
   h += '</div>';
   h += '<div class="card wide"><h3>Pour un réseau de partenaires RGE</h3><div class="args" style="margin-top:12px">'
     + '<div class="arg bad"><b>Le discours « avec MaPrimeRénov’ » ne tient plus en geste</b>Isolation, ventilation, bois, chauffe-eau thermodynamique, solaire : l’argument devient la prime CEE, la TVA à 5,5 % et l’éco-PTZ, ou le passage en rénovation d’ampleur (E, F, G).</div>'
