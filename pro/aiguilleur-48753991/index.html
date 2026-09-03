@@ -146,8 +146,13 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 auto 18px;max-width:1240px;overflow-x:auto}
 .tabs button{border:0;background:transparent;padding:10px 14px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
 .tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
-.bareme{max-width:1240px;margin:0 auto;display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
-.bareme .card{align-self:start;min-width:0;overflow-wrap:anywhere}
+.bareme{max-width:1240px;margin:0 auto;display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(480px,1fr))}
+@media (max-width:1040px){.bareme{grid-template-columns:1fr}}
+.bareme .card{align-self:start;min-width:0}
+.bareme td,.bareme th{overflow-wrap:normal;word-break:normal;hyphens:manual}
+.bareme td:first-child{min-width:120px}
+.bareme td,.bareme th{padding:7px 8px}
+.bareme td.n{min-width:0}
 .wide{grid-column:1/-1}
 .note{font-size:.84rem;color:var(--muted);border-left:3px solid var(--line);padding-left:10px}
 .lead-box{background:var(--surface-2);border-radius:11px;padding:14px}
@@ -1276,12 +1281,12 @@ function renderBareme(){
     + '<tr><td>Action seule (7 000 € pour les seules parois vitrées)</td><td class="n">15 000 €</td><td class="n">15 ans</td></tr><tr><td>Bouquet de 2 actions</td><td class="n">25 000 €</td><td class="n">15 ans</td></tr><tr><td>Bouquet de 3 actions ou plus</td><td class="n">30 000 €</td><td class="n">15 ans</td></tr><tr><td>Assainissement non collectif</td><td class="n">10 000 €</td><td class="n">15 ans</td></tr><tr><td>Performance globale / éco-PTZ MaPrimeRénov’</td><td class="n">50 000 €</td><td class="n">20 ans</td></tr>'
     + '</tbody></table></div><p class="note" style="margin-top:10px">Sans condition de ressources ; logement de plus de 2 ans, résidence principale ; un seul par logement (complémentaire dans les 5 ans, cumul 30 000 / 50 000 €) ; 3 ans pour réaliser les travaux ; 6 mois pour débloquer l’éco-PTZ MaPrimeRénov’ après notification ; pas de chaudière gaz ; couplage possible avec le prêt d’acquisition. Prêt avance rénovation (PAR+) : hypothécaire ≤ 50 000 €, 10 ans à taux zéro, ménages modestes et très modestes.</p></div>';
   h += '<div class="card"><h3>MaPrimeRénov’ Copropriété'+srcHtml([ref('anah',[24,25,26,60]), ref('mpr',[10,11])])+'</h3><div class="tblwrap"><table><tbody><tr><td>Gain ≥ 35 %</td><td class="n">30 % des travaux</td></tr><tr><td>Gain ≥ 50 %</td><td class="n">45 % des travaux</td></tr><tr><td>Sortie de passoire (F/G → D)</td><td class="n">+ 10 points</td></tr><tr><td>Copropriété fragile / en difficulté</td><td class="n">+ 20 points</td></tr><tr><td>Plafond de travaux</td><td class="n">25 000 € / logement</td></tr><tr><td>Primes occupants très modestes / modestes</td><td class="n">3 000 € / 1 500 €</td></tr><tr><td>AMO (obligatoire)</td><td class="n">50 %, 600–1 000 € HT / logt, plancher 3 000 €</td></tr></tbody></table></div><p class="note" style="margin-top:10px">≥ 75 % de lots en résidence principale (65 % si ≤ 20 lots), immatriculation à jour, ≥ 15 ans, évaluation énergétique. Chaudière gaz : intégrable au calcul du gain jusqu’au 31 décembre 2026 mais non financée. Petites copropriétés (≤ 20 lots, suivies par la collectivité) : gain ≥ 15 %, jusqu’en 2029. Accessibilité des parties communes : 50 % de 20 000 € par hall.</p></div>';
-  h += '<div class="card"><h3>CEE : les règles qui font perdre la prime'+srcHtml([ref('anah',[31,32,46])])+'</h3><div class="vigs">'
+  h += '<div class="card wide"><h3>CEE : les règles qui font perdre la prime'+srcHtml([ref('anah',[31,32,46])])+'</h3><div class="vigs">'
     + '<div class="vig bad"><i></i><span>L’engagement du fournisseur (ou délégataire) doit être écrit et antérieur à la signature du devis. Tolérance : 14 jours après signature. Au-delà, le bénéfice est perdu.</span></div>'
     + '<div class="vig warn"><i></i><span>Logement de plus de 2 ans, résidence principale ou secondaire, professionnel RGE quand la qualification existe, critères des fiches (PAC : COP &gt; 2,4 ou 2,5 ; PAC air/air : SCOP ≥ 3,9 ; coup de pouce : PAC agréée).</span></div>'
     + '<div class="vig info"><i></i><span>Coup de pouce chauffage : remplacement d’une chaudière charbon, fioul ou gaz par une chaudière biomasse, une PAC air/eau ou eau/eau, un système solaire combiné ou un réseau de chaleur ; charbon → appareil bois Flamme verte ; bonifié pour les ménages modestes et très modestes. Cumul avec MaPrimeRénov’ par geste (écrêtement), jamais avec la rénovation d’ampleur MaPrimeRénov’ (intégrés). Copropriétés fragiles : CEE valorisés par l’Anah uniquement.</span></div>'
     + '</div></div>';
-  h += '<div class="card"><h3>Critères techniques (geste et ampleur)'+srcHtml([ref('anah',[46,48,49,50,51,52,53,54])])+'</h3><div class="tblwrap"><table><thead><tr><th>Poste</th><th>Exigence</th></tr></thead><tbody>'
+  h += '<div class="card wide"><h3>Critères techniques (geste et ampleur)'+srcHtml([ref('anah',[46,48,49,50,51,52,53,54])])+'</h3><div class="tblwrap"><table><thead><tr><th>Poste</th><th>Exigence</th></tr></thead><tbody>'
     + '<tr><td>PAC air/eau, eau/eau, sol</td><td>Efficacité saisonnière ≥ 126 % (basse T°) ou ≥ 111 % (moyenne/haute T°), régulation classe IV</td></tr>'
     + '<tr><td>Fenêtres / portes-fenêtres</td><td>Uw ≤ 1,3 et Sw ≥ 0,3, ou Uw ≤ 1,7 et Sw ≥ 0,36 ; fenêtre de toiture Uw ≤ 1,5 et Sw ≥ 0,36 ; doubles fenêtres Uw ≤ 1,8 et Sw ≥ 0,32</td></tr>'
     + '<tr><td>Combles perdus / rampants / toiture-terrasse</td><td>R ≥ 7 / R ≥ 6 / R ≥ 6,5 (ampleur ; 4,5 en geste) m².K/W</td></tr>'
@@ -1293,7 +1298,7 @@ function renderBareme(){
     + '<tr><td>Solaire</td><td>Capteurs CSTBat ou Solar Keymark ; CESI ≥ 2 m², SSC ≥ 8 m²</td></tr>'
     + '<tr><td>Brasseurs d’air fixes (confort d’été)</td><td>Ø &gt; 1,32 m, 3 vitesses, &lt; 45 dB, &gt; 250 m³/Wh</td></tr>'
     + '</tbody></table></div></div>';
-  h += '<div class="card"><h3>Bailleurs et fiscalité'+srcHtml([ref('anah',[29,30,33,36,37,38]), ref('mpr',8)])+'</h3><div class="tblwrap"><table><tbody>'
+  h += '<div class="card wide"><h3>Bailleurs et fiscalité'+srcHtml([ref('anah',[29,30,33,36,37,38]), ref('mpr',8)])+'</h3><div class="tblwrap"><table><tbody>'
     + '<tr><td>Interdiction de location</td><td>G depuis 2025 · F en 2028 · E en 2034</td></tr>'
     + '<tr><td>Loc’Avantages (jusqu’au 31/12/2027)</td><td>Réduction d’impôt 15–65 % ; non meublé, 6 ans, locataire modeste hors famille, loyer plafonné ; travaux 25 % HT jusqu’à 15 000 € (énergétique, gain ≥ 35 %), 35 % jusqu’à 21 000 / 28 000 € (habitat dégradé) ; DPE D après travaux ; MAR requis (prime 80 %, plafond 2 000 €, ou 100 % / 4 000 € avec habitat indigne)</td></tr>'
     + '<tr><td>Denormandie</td><td>12 / 18 / 21 % pour 6 / 9 / 12 ans ; travaux ≥ 25 % de l’opération, améliorant la performance de 30 % ou combinant 2 types de travaux sur 5 ; plafond 300 000 € ; DPE A à E après travaux ; villes « Action cœur de ville » et ORT</td></tr>'
@@ -1302,7 +1307,7 @@ function renderBareme(){
     + '<tr><td>Prime sortie de vacance</td><td>5 000 € en zone rurale, logement vacant &gt; 2 ans, avec travaux Anah</td></tr>'
     + '<tr><td>TVA</td><td>5,5 % rénovation énergétique et travaux liés ; 10 % autres améliorations ; 20 % chaudière fossile, logements &lt; 2 ans, surélévation ou immeuble rendu neuf</td></tr>'
     + '</tbody></table></div></div>';
-  h += '<div class="card"><h3>MaPrimeAdapt’ et habitat indigne'+srcHtml([ref('anah',[55,56,58,59,62,63,64])])+'</h3><div class="tblwrap"><table><tbody>'
+  h += '<div class="card wide"><h3>MaPrimeAdapt’ et habitat indigne'+srcHtml([ref('anah',[55,56,58,59,62,63,64])])+'</h3><div class="tblwrap"><table><tbody>'
     + '<tr><td>MaPrimeAdapt’</td><td>70 % (très modestes) / 50 % (modestes) de 22 000 € HT ; 70 ans et plus, 60–69 ans avec GIR, handicap ≥ 50 % ou PCH ; AMO 600 / 800 € TTC pris en charge ; avance ≤ 30 % (hors mandataire financier) ; seconde demande dans 5 ans ; locataires éligibles</td></tr>'
     + '<tr><td>Adaptation, bailleurs</td><td>35 % de 750 € / m², 80 m² max (21 000 €), convention Anah</td></tr>'
     + '<tr><td>Ma Prime Logement Décent (occupants)</td><td>80 % / 60 % de 70 000 € HT, écrêtement 100 % / 90 % TTC, sortie en E minimum, +10 % sortie de passoire ; si E non atteinte : 50 % de 50 000 € HT ; logement ≥ 15 ans, grille de dégradation ≥ 0,35 ou d’insalubrité ≥ 0,4, audit obligatoire, avance ≤ 30 %</td></tr>'
