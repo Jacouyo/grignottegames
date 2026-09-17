@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Pirate Zéro — invitation d'équipage</title>
+<meta property="og:title" content="Rejoins mon équipage dans Pirate Zéro !">
+<meta property="og:description" content="Touche le lien pour monter à bord.">
+<meta property="og:image" content="https://grignottegames.com/e/icone.png">
+<meta property="og:type" content="website">
+<!--
+  LA PAGE DES INVITATIONS D'ÉQUIPAGE (17/09) — dépôt PirateZero,
+  scripts/invitation.gd. Le lien est https://grignottegames.com/e/?c=ABC234.
+  Jeu installé et domaine vérifié : Android ouvre le jeu sans passer ici.
+  Sinon cette page : le bouton ouvre le jeu (schéma piratezero://), et s'il
+  n'est pas installé, Android bascule sur la fiche Google Play.
+  Rien d'autre : aucun script tiers, aucune mesure d'audience.
+-->
+<style>
+  :root { --encre:#14161a; --vert:#a4d21c; --rouge:#d8343c; --gris:#5c6470; --fond:#ffffff; --carte:#f4f1e8; }
+  @media (prefers-color-scheme: dark) {
+    :root { --encre:#f2f4f6; --gris:#9aa3af; --fond:#14161a; --carte:#23262c; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+         background:var(--fond); color:var(--encre); padding:24px 16px;
+         font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+  main { width:100%; max-width:440px; text-align:center; }
+  .icone { width:112px; height:112px; border-radius:24px; display:block; margin:0 auto 16px; }
+  h1 { font-size:24px; line-height:1.25; margin:0 0 20px; }
+  .carte { background:var(--carte); border-radius:16px; padding:18px 16px; margin:0 0 20px; }
+  .etiquette { font-size:14px; color:var(--gris); margin:0; }
+  .code { font-size:44px; font-weight:800; letter-spacing:3px; color:var(--rouge); margin:4px 0 0; }
+  a.bouton { display:block; text-decoration:none; font-weight:700; font-size:19px; border-radius:14px;
+             padding:16px; margin:0 0 12px; }
+  a.ouvrir { background:var(--vert); color:#14161a; }
+  a.play { border:2px solid var(--gris); color:var(--encre); }
+  .aide { font-size:15px; color:var(--gris); margin:18px 0 0; }
+  footer { margin-top:32px; font-size:13px; color:var(--gris); }
+  footer a { color:var(--gris); }
+</style>
+</head>
+<body>
+<main>
+  <img class="icone" src="icone.png" alt="">
+  <h1 id="titre">Rejoins mon équipage dans Pirate Zéro !</h1>
+  <div class="carte" id="bloc-code">
+    <p class="etiquette" id="etiquette">Le code de l'équipage</p>
+    <p class="code" id="code">•••-•••</p>
+  </div>
+  <a class="bouton ouvrir" id="ouvrir" href="#">Ouvrir dans le jeu</a>
+  <a class="bouton play" id="play" href="https://play.google.com/store/apps/details?id=com.grignotte.piratezero">Installer Pirate Zéro</a>
+  <p class="aide" id="aide">Déjà installé ? Dans le jeu : BOSS MONDIAL › ÉQUIPAGE › REJOINDRE AVEC UN CODE.</p>
+  <footer>Grignotte Games — <a href="../confidentialite.html" id="confidentialite">Politique de confidentialité</a></footer>
+</main>
+<script>
+(function () {
+  var PAQUET = "com.grignotte.piratezero";
+  var PLAY = "https://play.google.com/store/apps/details?id=" + PAQUET;
+  var en = !/^fr\b/i.test(navigator.language || "fr");
+  if (en) {
+    document.documentElement.lang = "en";
+    document.title = "Pirate Zéro — crew invitation";
+    document.getElementById("titre").textContent = "Join my crew in Pirate Zéro!";
+    document.getElementById("etiquette").textContent = "Crew code";
+    document.getElementById("ouvrir").textContent = "Open in the game";
+    document.getElementById("play").textContent = "Install Pirate Zéro";
+    document.getElementById("aide").textContent = "Already installed? In the game: WORLD BOSS › CREW › JOIN WITH A CODE.";
+    document.getElementById("confidentialite").textContent = "Privacy policy";
+  }
+  var brut = new URLSearchParams(location.search).get("c") || "";
+  var code = brut.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  var ouvrir = document.getElementById("ouvrir");
+  if (!/^[A-Z0-9]{6}$/.test(code)) {
+    document.getElementById("bloc-code").style.display = "none";
+    ouvrir.style.display = "none";
+    return;
+  }
+  document.getElementById("code").textContent = code.slice(0, 3) + "-" + code.slice(3);
+  if (/android/i.test(navigator.userAgent)) {
+    // Jeu installé : il s'ouvre sur l'invitation. Sinon : la fiche Google Play.
+    ouvrir.href = "intent://e/" + code + "#Intent;scheme=piratezero;package=" + PAQUET +
+      ";S.browser_fallback_url=" + encodeURIComponent(PLAY) + ";end";
+  } else {
+    // Pas d'Android : le jeu n'existe que là, le bouton n'a rien à ouvrir.
+    ouvrir.style.display = "none";
+  }
+})();
+</script>
+</body>
+</html>

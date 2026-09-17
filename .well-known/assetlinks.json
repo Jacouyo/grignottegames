@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.grignotte.piratezero",
+      "sha256_cert_fingerprints": [
+        "96:DB:32:38:3F:D5:AC:61:7D:AA:35:11:E8:8B:F8:C6:C3:DB:4C:7C:B1:1C:15:1B:A0:86:AC:D6:06:6E:6A:AF"
+      ]
+    }
+  }
+]
